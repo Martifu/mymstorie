@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isSpaceMember(spaceId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/spaces/$(spaceId)) &&
+        get(/databases/$(database)/documents/spaces/$(spaceId)).data.members.hasAny([request.auth.uid]);
+    }
+
+    match /users/{uid} {
+      allow read, create, update, delete: if isOwner(uid);
+    }
+
+    match /spaces/{spaceId} {
+      allow read: if isSpaceMember(spaceId);
+      allow create: if isSignedIn();
+      allow update, delete: if isSpaceMember(spaceId);
+    }
+
+    match /spaces/{spaceId}/childProfile/{docId} {
+      allow read: if isSpaceMember(spaceId);
+      allow create, update, delete: if isSpaceMember(spaceId);
+    }
+
+    match /spaces/{spaceId}/entries/{entryId} {
+      allow read: if isSpaceMember(spaceId);
+
+      allow create: if isSpaceMember(spaceId)
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.type in ['memory','goal','child_event']
+        && (request.resource.data.media is list && request.resource.data.media.size() <= 10)
+        && (request.resource.data.title is string && request.resource.data.title.size() > 0)
+        && (request.resource.data.date is timestamp);
+
+      allow update, delete: if isSpaceMember(spaceId) && resource.data.createdBy == request.auth.uid;
+    }
+  }
+}
