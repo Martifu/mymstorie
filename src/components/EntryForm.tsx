@@ -1,14 +1,20 @@
 import { useForm } from 'react-hook-form';
+import { useState } from 'react';
 import imageCompression from 'browser-image-compression';
+import { FileUpload } from './FileUpload';
+
+interface FileWithPreview extends File {
+    preview?: string;
+}
 
 type FormValues = {
     title: string; description?: string; date: string; tags?: string;
-    files: FileList;
 };
 
-export function EntryForm({ onSubmit }: { onSubmit: (data: FormData) => Promise<void> }) {
-    const { register, handleSubmit, formState: { errors }, watch } = useForm<FormValues>();
-    const files = watch('files');
+export function EntryForm({ onSubmit }: { onSubmit: (data: FormData, onProgress?: (fileName: string, progress: number) => void) => Promise<void> }) {
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>();
+    const [files, setFiles] = useState<FileWithPreview[]>([]);
+    const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
 
     async function compress(file: File): Promise<File> {
         const compressed = await imageCompression(file, { maxWidthOrHeight: 1440, initialQuality: 0.82, useWebWorker: true });
@@ -21,15 +27,26 @@ export function EntryForm({ onSubmit }: { onSubmit: (data: FormData) => Promise<
         fd.append('date', values.date);
         if (values.description) fd.append('description', values.description);
         if (values.tags) fd.append('tags', values.tags);
-        if (values.files) {
-            const filesArr = Array.from(values.files).slice(0, 10);
-            for (const f of filesArr) {
-                const isImage = f.type.startsWith('image/');
-                const fileToUpload = isImage ? await compress(f) : f;
-                fd.append('media', fileToUpload, f.name);
-            }
+
+        // Procesar archivos seleccionados
+        for (const f of files.slice(0, 10)) {
+            const isImage = f.type.startsWith('image/');
+            const fileToUpload = isImage ? await compress(f) : f;
+            fd.append('media', fileToUpload, f.name);
         }
-        await onSubmit(fd);
+
+        await onSubmit(fd, (fileName, progress) => {
+            setUploadProgress((prev: { [key: string]: number }) => ({ ...prev, [fileName]: progress }));
+        });
+
+        // Limpiar archivos después de envío exitoso
+        files.forEach(file => {
+            if (file.preview) {
+                URL.revokeObjectURL(file.preview);
+            }
+        });
+        setFiles([]);
+        setUploadProgress({});
     });
 
     return (
@@ -53,12 +70,22 @@ export function EntryForm({ onSubmit }: { onSubmit: (data: FormData) => Promise<
                 <input className="mt-1 w-full rounded-xl border p-3" placeholder="familia, viaje" {...register('tags')} />
             </div>
             <div>
-                <label className="block text-sm font-semibold">Fotos o video (hasta 10)</label>
-                <input type="file" accept="image/*,video/*" multiple className="mt-1" {...register('files')} />
-                {files && <p className="text-text-muted text-sm mt-1">{Array.from(files).length} seleccionados</p>}
+                <label className="block text-sm font-semibold mb-2">Fotos o video (hasta 10)</label>
+                <FileUpload
+                    files={files}
+                    onChange={setFiles}
+                    uploadProgress={uploadProgress}
+                    isUploading={isSubmitting}
+                    maxFiles={10}
+                />
             </div>
             <div className="sticky bottom-0 bg-surface p-4 -mx-4 border-t">
-                <button className="w-full rounded-pill bg-brand-ochre text-white py-3 font-semibold active:scale-pressed transition">Guardar</button>
+                <button
+                    disabled={isSubmitting}
+                    className="w-full rounded-pill bg-brand-blue text-white py-3 font-semibold active:scale-pressed transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {isSubmitting ? 'Guardando...' : 'Guardar'}
+                </button>
             </div>
         </form>
     );

@@ -4,6 +4,12 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  build: {
+    sourcemap: true,
+  },
+  server: {
+    port: 5173,
+  },
   plugins: [
     react(),
     VitePWA({
@@ -12,7 +18,7 @@ export default defineConfig({
       manifest: {
         name: 'mymstorie',
         short_name: 'mymstorie',
-        theme_color: '#D17A22',
+        theme_color: '#8B5CF6',
         background_color: '#FFFDFB',
         display: 'standalone',
         lang: 'es',
@@ -31,7 +37,7 @@ export default defineConfig({
             options: { cacheName: 'html', networkTimeoutSeconds: 3 }
           },
           {
-            urlPattern: ({ request }) => ['script','style'].includes(request.destination),
+            urlPattern: ({ request }) => ['script', 'style'].includes(request.destination),
             handler: 'StaleWhileRevalidate',
             options: { cacheName: 'assets' }
           },
@@ -48,7 +54,11 @@ export default defineConfig({
           {
             urlPattern: ({ url }) => url.origin.includes('firebasestorage.googleapis.com') || url.origin.includes('storage.googleapis.com'),
             handler: 'CacheFirst',
-            options: { cacheName: 'media' }
+            options: {
+              cacheName: 'media',
+              expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 30 }, // 30 días
+              cacheableResponse: { statuses: [0, 200] }
+            }
           }
         ]
       }

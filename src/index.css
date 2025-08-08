@@ -5,10 +5,35 @@
 :root {
   color-scheme: light;
 }
+
 .dark {
   color-scheme: dark;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
+}
+
+/* Timeline date colors */
+.timeline-date-birthday {
+  color: #EC4899 !important;
+  /* pink-600 */
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+.timeline-date-memory {
+  color: #8B5CF6 !important;
+  /* brand-purple */
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+.timeline-date-milestone {
+  color: #F59E0B !important;
+  /* brand-gold */
+  font-weight: 600 !important;
+  font-size: 14px !important;
 }

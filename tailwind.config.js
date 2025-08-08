@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
-  content: ['./index.html','./src/**/*.{ts,tsx}'],
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       fontFamily: {
@@ -25,6 +25,46 @@ export default {
           sage: '#B4C292',
           reseda: '#736F4E',
           drab: '#3B3923',
+          // Nuevos colores del tema
+          purple: {
+            DEFAULT: '#8B5CF6',
+            50: '#F3F0FF',
+            100: '#E9E5FF',
+            200: '#D6CCFF',
+            300: '#B8A3FF',
+            400: '#9B71FF',
+            500: '#8B5CF6',
+            600: '#7C3AED',
+            700: '#6D28D9',
+            800: '#5B21B6',
+            900: '#4C1D95',
+          },
+          blue: {
+            DEFAULT: '#3B82F6',
+            50: '#EFF6FF',
+            100: '#DBEAFE',
+            200: '#BFDBFE',
+            300: '#93C5FD',
+            400: '#60A5FA',
+            500: '#3B82F6',
+            600: '#2563EB',
+            700: '#1D4ED8',
+            800: '#1E40AF',
+            900: '#1E3A8A',
+          },
+          gold: {
+            DEFAULT: '#F59E0B',
+            50: '#FFFBEB',
+            100: '#FEF3C7',
+            200: '#FDE68A',
+            300: '#FCD34D',
+            400: '#FBBF24',
+            500: '#F59E0B',
+            600: '#D97706',
+            700: '#B45309',
+            800: '#92400E',
+            900: '#78350F',
+          },
         },
         surface: {
           DEFAULT: '#FFFFFF',
@@ -62,7 +102,7 @@ export default {
     },
   },
   plugins: [
-    function({ addVariant }) {
+    function ({ addVariant }) {
       addVariant('hocus', ['&:hover', '&:focus-visible']);
     }
   ],

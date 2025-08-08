@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { getMessaging, isSupported, getToken, onMessage } from 'firebase/messaging';
+import { getMessaging, isSupported, getToken } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FB_API_KEY,
@@ -19,18 +19,20 @@ export const provider = new GoogleAuthProvider();
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-enableIndexedDbPersistence(db).catch(() => {});
+enableIndexedDbPersistence(db).catch(() => { });
 
-export async function setupMessaging(): Promise<void> {
+export async function setupMessaging(): Promise<string | undefined> {
   if (!(await isSupported())) return;
   const messaging = getMessaging(app);
   const vapidKey = import.meta.env.VITE_FB_VAPID_KEY;
   try {
-    await getToken(messaging, { vapidKey });
-  } catch {}
-  onMessage(messaging, (payload) => {
-    console.log('FCM', payload);
-  });
+    if (typeof Notification !== 'undefined') {
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') return undefined;
+    }
+    const token = await getToken(messaging, { vapidKey });
+    return token || undefined;
+  } catch { return undefined; }
 }
 
 
