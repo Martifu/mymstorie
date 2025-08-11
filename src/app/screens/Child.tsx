@@ -181,29 +181,10 @@ export function Child() {
         [groupedByDay]
     );
 
-    // Build months list (YYYY-MM) having events
-    const monthKeysDesc = useMemo(() => {
-        const set = new Set(dayKeysDesc.map((d) => d.slice(0, 7)));
-        return Array.from(set).sort((a, b) => (a < b ? 1 : -1));
-    }, [dayKeysDesc]);
 
-    const initialMonth = monthKeysDesc[0];
-    const [selectedMonth, setSelectedMonth] = useState<string | undefined>(initialMonth);
-    const daysInSelectedMonth = useMemo(
-        () => dayKeysDesc.filter((d) => d.startsWith(selectedMonth || '')),
-        [dayKeysDesc, selectedMonth]
-    );
-    const initialDay = daysInSelectedMonth[0];
-    const [selectedDay, setSelectedDay] = useState<string | undefined>(initialDay);
 
     // Refs para hacer scroll a un día al tocarlo en la tira superior
     const dayRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
-    const scrollToDay = (key: string) => {
-        setSelectedDay(key);
-        const el = dayRefs.current[key];
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
 
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });

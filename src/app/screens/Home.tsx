@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react';
 import { useAuth } from '../../features/auth/useAuth';
 import { useEntries } from '../../features/entries/useEntries';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Camera, Baby, Target, Calendar, Heart, Plus, Clock, CheckCircle, MagnifyingGlass, Bell } from 'phosphor-react';
+import { Camera, Baby, Target, Heart, Plus, Bell } from 'phosphor-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export function Home() {

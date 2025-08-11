@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../features/auth/useAuth';
 import { useEntries } from '../../features/entries/useEntries';
-import { EntryCard, AppBar } from '../../components';
+import { AppBar } from '../../components';
 import { FlagBanner, Plus, CheckCircle, Clock } from 'phosphor-react';
 import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
@@ -105,7 +105,7 @@ export function Goals() {
                             <GoalCard
                                 goal={goal}
                                 onClick={() => {
-                                    if (goal.status === 'completed') {
+                                    if ((goal as any).status === 'completed') {
                                         window.location.href = `/goals/${goal.id}`;
                                     } else {
                                         window.location.href = `/goals/${goal.id}/complete`;

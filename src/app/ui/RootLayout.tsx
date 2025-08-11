@@ -3,7 +3,7 @@ import type { ComponentType } from 'react';
 import { useAuth } from '../../features/auth/useAuth';
 import { Home2, Image, DocumentText, Profile as ProfileIcon, People } from 'iconsax-react';
 import { FAB } from '../../components';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 export function RootLayout() {
     const { user, loading, signInWithGoogle } = useAuth();
