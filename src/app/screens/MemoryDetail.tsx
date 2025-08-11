@@ -1,8 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
-import { db } from '../../lib/firebase';
+
+import { useEntries } from '../../features/entries/useEntries';
 import { ArrowLeft, Calendar } from 'iconsax-react';
+import { LoadingSpinner } from '../../components';
 
 import birthdayIcon from '../../assets/birthday-icon.svg';
 import milestoneIcon from '../../assets/milestone-icon.svg';
@@ -46,18 +46,19 @@ function getCategoryIcon(entry: Entry) {
 export default function MemoryDetail() {
     const { spaceId, entryId } = useParams();
     const navigate = useNavigate();
-    const [entry, setEntry] = useState<Entry | null>(null);
 
-    useEffect(() => {
-        (async () => {
-            if (!spaceId || !entryId) return;
-            const snap = await getDoc(doc(db, `spaces/${spaceId}/entries/${entryId}`));
-            if (!snap.exists()) return;
-            setEntry(snap.data() as Entry);
-        })();
-    }, [spaceId, entryId]);
+    const { entries: memories } = useEntries(spaceId || null, 'memory');
+    const { entries: goals } = useEntries(spaceId || null, 'goal');
+    const { entries: childEvents } = useEntries(spaceId || null, 'child_event');
 
-    if (!entry) return <div className="p-4">Cargando…</div>;
+    // Buscar el entry en todas las colecciones
+    const entry = [...memories, ...goals, ...childEvents].find(e => e.id === entryId);
+
+    if (!entry) return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <LoadingSpinner text="Cargando detalles..." variant="pulse" size="lg" />
+        </div>
+    );
     const cover = entry.media?.[0];
     const category = getEntryCategory(entry);
     const categoryIcon = getCategoryIcon(entry);

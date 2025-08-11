@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useAuth } from '../../features/auth/useAuth';
 import { useEntries } from '../../features/entries/useEntries';
+import { useSpaces } from '../../features/spaces/useSpaces';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Baby, Target, Heart, Plus, Bell } from 'phosphor-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,6 +10,7 @@ import { es } from 'date-fns/locale';
 
 export function Home() {
     const { spaceId, user } = useAuth();
+    const { userProfile } = useSpaces();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [showEventSelector, setShowEventSelector] = useState(false);
@@ -121,8 +123,18 @@ export function Home() {
             <motion.div variants={itemVariants} className="pt-6 pb-4">
                 <div className="flex items-center justify-between mb-4 px-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-brand-purple to-purple-600 rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold text-lg">👨‍👩‍👧‍👦</span>
+                        <div className="w-12 h-12 bg-gradient-to-br from-brand-purple to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
+                            {userProfile?.photoURL || user?.photoURL ? (
+                                <img
+                                    src={userProfile?.photoURL || user?.photoURL || ''}
+                                    alt="Foto de perfil"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span className="text-white font-bold text-lg">
+                                    {userName?.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2) || '👨‍👩‍👧‍👦'}
+                                </span>
+                            )}
                         </div>
                         <div>
                             <p className="text-sm text-gray-500">¡Hola {userName}!</p>
@@ -252,7 +264,7 @@ export function Home() {
                 </div>
 
                 {feedData.totalCount === 0 && (
-                    <div className="text-center py-12">
+                    <div className="text-center py-12 px-4">
                         <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Heart size={32} className="text-gray-400" />
                         </div>

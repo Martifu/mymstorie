@@ -63,7 +63,7 @@ export function AppBar({
                                     placeholder={searchPlaceholder}
                                     value={localSearchValue}
                                     onChange={(e) => handleSearchChange(e.target.value)}
-                                    className="w-64 pl-10 pr-4 py-2 rounded-pill border border-gray-200 bg-white text-sm placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple transition"
+                                    className="w-48 pl-10 pr-4 py-2 rounded-pill border border-gray-200 bg-white text-sm placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple transition"
                                 />
                                 <MagnifyingGlass
                                     size={18}

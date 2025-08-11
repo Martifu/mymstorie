@@ -1,12 +1,19 @@
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import type { ComponentType } from 'react';
 import { useAuth } from '../../features/auth/useAuth';
+import { useSpaces } from '../../features/spaces/useSpaces';
+import { SpaceSelection } from '../screens/SpaceSelection';
+import { Onboarding } from '../screens/Onboarding';
+import { Login } from '../screens/Login';
+import { FullScreenLoader } from '../../components';
 import { Home2, Image, DocumentText, Profile as ProfileIcon, People } from 'iconsax-react';
 import { FAB } from '../../components';
 import { motion } from 'framer-motion';
 
 export function RootLayout() {
     const { user, loading, signInWithGoogle } = useAuth();
+    const { userProfile, loading: spacesLoading } = useSpaces();
     const location = useLocation();
     const navigate = useNavigate();
     const isCreationPage = location.pathname.includes('/new') || location.pathname.includes('/edit');
@@ -14,17 +21,32 @@ export function RootLayout() {
     const showFAB = !location.pathname.startsWith('/profile') && !isCreationPage && !isDetailPage;
     const showNavbar = !isCreationPage && !isDetailPage;
 
-    if (loading) return <div className="p-6">Cargando…</div>;
+    // Estados para el onboarding
+    const [showOnboarding, setShowOnboarding] = useState(() => {
+        return !localStorage.getItem('onboarding-completed');
+    });
+
+    const handleOnboardingComplete = () => {
+        localStorage.setItem('onboarding-completed', 'true');
+        setShowOnboarding(false);
+    };
+
+    if (loading || spacesLoading) {
+        return <FullScreenLoader text="Cargando..." variant="heart" />;
+    }
     if (!user) {
-        return (
-            <div className="min-h-dvh grid place-items-center p-6">
-                <div className="w-full max-w-sm rounded-2xl border bg-white p-6 shadow-soft">
-                    <h1 className="text-xl font-bold mb-2">mymstorie</h1>
-                    <p className="text-text-muted mb-4">Tu rincón familiar privado ✨</p>
-                    <button onClick={signInWithGoogle} className="w-full rounded-pill bg-brand-blue text-white py-3 font-semibold active:scale-pressed transition">Continuar con Google</button>
-                </div>
-            </div>
-        );
+        // Mostrar onboarding si no se ha completado
+        if (showOnboarding) {
+            return <Onboarding onComplete={handleOnboardingComplete} />;
+        }
+
+        // Mostrar pantalla de login rediseñada
+        return <Login onSignIn={signInWithGoogle} loading={loading} />;
+    }
+
+    // Si el usuario no tiene un espacio actual, mostrar selección de espacios
+    if (!userProfile?.currentSpaceId) {
+        return <SpaceSelection />;
     }
 
     return (

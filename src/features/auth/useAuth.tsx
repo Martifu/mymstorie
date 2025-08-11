@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { arrayUnion, doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
-import { ensureDefaultSpace } from '../space/spaceService';
+import { getUserProfile } from '../spaces/spacesService';
 import { setupMessaging } from '../../lib/firebase';
 
 type AuthContextType = {
@@ -43,9 +43,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 } else {
                     await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
                 }
-                // Ensure a default space exists or pick the first spaceId
-                const ensuredSpaceId = await ensureDefaultSpace(u.uid);
-                setSpaceId(ensuredSpaceId);
+                // Obtener el perfil del usuario y su espacio actual
+                const userProfile = await getUserProfile(u.uid);
+                setSpaceId(userProfile?.currentSpaceId || null);
                 // Setup FCM and store token
                 try {
                     const token = await setupMessaging();

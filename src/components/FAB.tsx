@@ -46,7 +46,7 @@ export function FAB({ onPick }: { onPick: (type: 'memory' | 'goal' | 'child_even
 
       <button
         className={clsx(
-          'h-14 w-14 rounded-full bg-brand-purple text-white shadow-softer transition duration-300 active:scale-pressed'
+          'h-14 w-14 rounded-full bg-brand-purple text-white shadow-softer shadow-purple-500/25 transition duration-300 active:scale-pressed hover:shadow-xl hover:shadow-purple-500/30'
         )}
         onClick={() => setOpen((v) => !v)}
         aria-label="Crear"

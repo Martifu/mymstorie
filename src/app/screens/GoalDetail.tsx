@@ -4,6 +4,7 @@ import { useAuth } from '../../features/auth/useAuth';
 import { useEntries } from '../../features/entries/useEntries';
 import { ArrowLeft, CheckCircle, Calendar, ChatText, Image } from 'phosphor-react';
 import { motion } from 'framer-motion';
+import { LoadingSpinner } from '../../components';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -31,11 +32,8 @@ export default function GoalDetail() {
 
     if (!currentGoal) {
         return (
-            <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="text-6xl mb-4">🔍</div>
-                    <p className="text-gray-500">Cargando objetivo...</p>
-                </div>
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <LoadingSpinner text="Cargando objetivo..." variant="dots" size="lg" />
             </div>
         );
     }
