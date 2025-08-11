@@ -5,7 +5,7 @@ import { Add, Image, DocumentText, Profile2User } from 'iconsax-react';
 export function FAB({ onPick }: { onPick: (type: 'memory' | 'goal' | 'child_event') => void }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="fixed bottom-20 right-6 z-50">
+    <div className="fixed bottom-[90px] right-6 z-50">
       {open && (
         <>
           <button

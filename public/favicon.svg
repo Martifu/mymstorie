@@ -1,0 +1,28 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo con gradiente moderno -->
+  <rect width="32" height="32" rx="8" fill="url(#modernGradient)" />
+  
+  <!-- Elementos representativos -->
+  <!-- Corazón (familia) -->
+  <path d="M16 26L14.5 24.7C9.5 20.1 6 16.9 6 13C6 10.2 8.2 8 11 8C12.7 8 14.4 8.9 15 10.3C15.6 8.9 17.3 8 19 8C21.8 8 24 10.2 24 13C24 16.9 20.5 20.1 15.5 24.7L14 26H16Z" fill="white" opacity="0.9" transform="scale(0.4) translate(20, 5)"/>
+  
+  <!-- Cámara (recuerdos) -->
+  <rect x="8" y="10" width="8" height="6" rx="1" fill="white" opacity="0.8"/>
+  <circle cx="12" cy="13" r="1.5" fill="#8B5CF6"/>
+  <rect x="9" y="8" width="2" height="2" rx="0.5" fill="white" opacity="0.6"/>
+  
+  <!-- Estrella (objetivos) -->
+  <path d="M24 12L22.5 15H19L21.75 17L20.5 21L24 19L27.5 21L26.25 17L29 15H25.5L24 12Z" fill="white" opacity="0.7" transform="scale(0.3) translate(15, -5)"/>
+  
+  <!-- Bebé (hitos del hijo) -->
+  <circle cx="20" cy="20" r="2" fill="white" opacity="0.6"/>
+  <path d="M20 24C21.1 24 22 23.1 22 22V21C22 20.4 21.6 20 21 20H19C18.4 20 18 20.4 18 21V22C18 23.1 18.9 24 20 24Z" fill="white" opacity="0.6"/>
+  
+  <defs>
+    <linearGradient id="modernGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6"/>
+      <stop offset="50%" style="stop-color:#A855F7"/>
+      <stop offset="100%" style="stop-color:#7C3AED"/>
+    </linearGradient>
+  </defs>
+</svg>

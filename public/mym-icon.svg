@@ -1,0 +1,178 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo principal con gradiente premium -->
+  <rect width="512" height="512" rx="115" fill="url(#premiumGradient)" />
+  
+  <!-- Capas de profundidad -->
+  <rect x="15" y="15" width="482" height="482" rx="100" fill="none" stroke="url(#outerGlow)" stroke-width="6" opacity="0.4"/>
+  <rect x="30" y="30" width="452" height="452" rx="85" fill="none" stroke="url(#middleGlow)" stroke-width="4" opacity="0.3"/>
+  <rect x="45" y="45" width="422" height="422" rx="70" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+  
+  <!-- Contenedor principal centrado -->
+  <g transform="translate(256, 256)">
+    
+    <!-- Círculo base con glassmorphism -->
+    <circle r="190" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.15)" stroke-width="3"/>
+    <circle r="170" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" stroke-width="2"/>
+    <circle r="150" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    
+    <!-- Elementos funcionales organizados en círculo perfecto -->
+    
+    <!-- 1. RECUERDOS - Cámara profesional (0°) -->
+    <g transform="translate(0, -110)">
+      <rect x="-30" y="-22" width="60" height="44" rx="8" fill="white" opacity="0.95" stroke="rgba(124,58,237,0.3)" stroke-width="2"/>
+      <!-- Lente principal -->
+      <circle r="16" fill="#7C3AED"/>
+      <circle r="10" fill="white"/>
+      <circle r="6" fill="#A855F7"/>
+      <circle r="2" fill="white"/>
+      <!-- Visor -->
+      <rect x="-10" y="-32" width="20" height="12" rx="3" fill="white" opacity="0.9"/>
+      <!-- Flash -->
+      <rect x="20" y="-18" width="8" height="6" rx="1" fill="white" opacity="0.8"/>
+      <!-- Detalles -->
+      <circle cx="-15" cy="-8" r="2" fill="rgba(124,58,237,0.6)"/>
+      <rect x="10" y="5" width="12" height="3" rx="1.5" fill="rgba(124,58,237,0.4)"/>
+    </g>
+    
+    <!-- 2. FAMILIA - Corazón con elementos familiares (60°) -->
+    <g transform="translate(95, -55) rotate(0)">
+      <!-- Corazón principal -->
+      <path d="M0 30L-8 22C-20 12 -24 6 -24 0C-24 -6 -18 -12 -12 -12C-6 -12 -2 -9 0 -6C2 -9 6 -12 12 -12C18 -12 24 -6 24 0C24 6 20 12 8 22L0 30Z" fill="white" opacity="0.95"/>
+      <!-- Pequeños corazones familiares -->
+      <path d="M-25 -5L-27 -7C-30 -9.5 -31 -11 -31 -12C-31 -13 -30 -14 -29 -14C-28 -14 -27.5 -13.5 -27 -13C-26.5 -13.5 -26 -14 -25 -14C-24 -14 -23 -13 -23 -12C-23 -11 -24 -9.5 -27 -7L-25 -5Z" fill="rgba(255,255,255,0.8)"/>
+      <path d="M25 8L23 6C20 4 19 3 19 2C19 1 20 0 21 0C22 0 22.5 0.5 23 1C23.5 0.5 24 0 25 0C26 0 27 1 27 2C27 3 26 4 23 6L25 8Z" fill="rgba(255,255,255,0.7)"/>
+      <!-- Conexiones familiares -->
+      <circle cx="0" cy="-8" r="1.5" fill="rgba(124,58,237,0.6)"/>
+    </g>
+    
+    <!-- 3. OBJETIVOS - Estrella con elementos de meta (120°) -->
+    <g transform="translate(95, 55)">
+      <!-- Estrella principal -->
+      <path d="M0 -25L6 -6H25L10 6L16 25L0 15L-16 25L-10 6L-25 -6H-6L0 -25Z" fill="white" opacity="0.95"/>
+      <!-- Elementos de progreso -->
+      <circle cx="0" cy="-8" r="3" fill="#7C3AED"/>
+      <circle cx="0" cy="0" r="2" fill="white"/>
+      <!-- Indicadores de logro -->
+      <rect x="-15" y="15" width="8" height="2" rx="1" fill="rgba(255,255,255,0.7)"/>
+      <rect x="-5" y="15" width="6" height="2" rx="1" fill="rgba(124,58,237,0.6)"/>
+      <rect x="3" y="15" width="4" height="2" rx="1" fill="rgba(168,85,247,0.5)"/>
+      <!-- Brillo -->
+      <path d="M-6 -15L-3 -18L0 -15" stroke="rgba(255,255,255,0.8)" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </g>
+    
+    <!-- 4. HITOS DEL HIJO - Bebé con línea temporal (180°) -->
+    <g transform="translate(0, 110)">
+      <!-- Bebé -->
+      <circle r="20" fill="white" opacity="0.95"/>
+      <!-- Cuerpo -->
+      <rect x="-24" y="8" width="48" height="30" rx="10" fill="white" opacity="0.9"/>
+      <!-- Cara -->
+      <circle cx="-7" cy="-6" r="3" fill="#7C3AED"/>
+      <circle cx="7" cy="-6" r="3" fill="#7C3AED"/>
+      <circle cx="-7" cy="-6" r="1" fill="white"/>
+      <circle cx="7" cy="-6" r="1" fill="white"/>
+      <!-- Sonrisa -->
+      <path d="M-10 4L0 12L10 4" stroke="#7C3AED" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <!-- Brazos -->
+      <circle cx="-30" cy="18" r="8" fill="white" opacity="0.85"/>
+      <circle cx="30" cy="18" r="8" fill="white" opacity="0.85"/>
+      <!-- Línea temporal -->
+      <line x1="-40" y1="35" x2="40" y2="35" stroke="rgba(255,255,255,0.6)" stroke-width="2"/>
+      <circle cx="-30" cy="35" r="2" fill="rgba(168,85,247,0.8)"/>
+      <circle cx="-10" cy="35" r="2" fill="rgba(124,58,237,0.8)"/>
+      <circle cx="10" cy="35" r="2" fill="rgba(255,255,255,0.6)"/>
+      <circle cx="30" cy="35" r="2" fill="rgba(255,255,255,0.4)"/>
+    </g>
+    
+    <!-- 5. MEMORIA/GALERÍA - Fotos apiladas (-120°) -->
+    <g transform="translate(-95, 55)">
+      <!-- Foto principal -->
+      <rect x="-20" y="-15" width="32" height="24" rx="3" fill="white" opacity="0.95" stroke="rgba(124,58,237,0.2)" stroke-width="1"/>
+      <circle cx="-8" cy="-6" r="6" fill="#A855F7" opacity="0.8"/>
+      <circle cx="-8" cy="-6" r="3" fill="white"/>
+      <rect x="5" y="-12" width="8" height="2" rx="1" fill="rgba(124,58,237,0.6)"/>
+      <rect x="5" y="-8" width="6" height="2" rx="1" fill="rgba(168,85,247,0.5)"/>
+      
+      <!-- Fotos apiladas */
+      <rect x="-17" y="-12" width="32" height="24" rx="3" fill="rgba(255,255,255,0.7)"/>
+      <rect x="-14" y="-9" width="32" height="24" rx="3" fill="rgba(255,255,255,0.5)"/>
+      
+      <!-- Elementos decorativos */
+      <circle cx="18" cy="-20" r="3" fill="rgba(255,255,255,0.6)"/>
+      <path d="M15 -25L18 -22L21 -25" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" fill="none"/>
+    </g>
+    
+    <!-- 6. CALENDARIO/TIMELINE - Organización temporal (-60°) -->
+    <g transform="translate(-95, -55)">
+      <!-- Calendario principal -->
+      <rect x="-18" y="-22" width="36" height="44" rx="4" fill="white" opacity="0.95"/>
+      <!-- Header del calendario -->
+      <rect x="-18" y="-22" width="36" height="10" rx="4" fill="#7C3AED" opacity="0.8"/>
+      <!-- Anillas -->
+      <rect x="-12" y="-28" width="4" height="12" rx="2" fill="white" opacity="0.8"/>
+      <rect x="8" y="-28" width="4" height="12" rx="2" fill="white" opacity="0.8"/>
+      
+      <!-- Días del calendario */
+      <g fill="rgba(124,58,237,0.6)">
+        <circle cx="-10" cy="-8" r="1.5"/>
+        <circle cx="-2" cy="-8" r="1.5"/>
+        <circle cx="6" cy="-8" r="1.5"/>
+        <circle cx="-10" cy="0" r="1.5"/>
+        <circle cx="6" cy="0" r="1.5"/>
+        <circle cx="-10" cy="8" r="1.5"/>
+        <circle cx="-2" cy="8" r="1.5"/>
+        <circle cx="6" cy="8" r="1.5"/>
+      </g>
+      <!-- Día destacado -->
+      <circle cx="-2" cy="0" r="3" fill="#7C3AED"/>
+      <circle cx="-2" cy="0" r="1.5" fill="white"/>
+      
+      <!-- Indicadores de eventos -->
+      <rect x="-15" y="15" width="10" height="1.5" rx="0.75" fill="rgba(168,85,247,0.7)"/>
+      <rect x="-3" y="15" width="8" height="1.5" rx="0.75" fill="rgba(124,58,237,0.6)"/>
+      <rect x="7" y="15" width="6" height="1.5" rx="0.75" fill="rgba(168,85,247,0.5)"/>
+    </g>
+    
+    <!-- Texto central con mejor jerarquía -->
+    <text y="5" font-family="Arial, sans-serif" font-size="68" font-weight="bold" text-anchor="middle" fill="white" opacity="0.98">mym</text>
+    <text y="35" font-family="Arial, sans-serif" font-size="18" font-weight="normal" text-anchor="middle" fill="rgba(255,255,255,0.8)">stories</text>
+    
+    <!-- Líneas conectoras sutiles entre elementos -->
+    <g stroke="rgba(255,255,255,0.1)" stroke-width="1" fill="none" opacity="0.5">
+      <path d="M0 -90L75 -35"/>
+      <path d="M75 35L0 90"/>
+      <path d="M-75 35L-75 -35"/>
+      <path d="M75 -35L75 35"/>
+      <path d="M-75 -35L0 -90"/>
+      <path d="M0 90L-75 35"/>
+    </g>
+  </g>
+  
+  <!-- Múltiples highlights para efecto premium -->
+  <ellipse cx="180" cy="130" rx="80" ry="40" fill="rgba(255,255,255,0.12)" transform="rotate(-25 180 130)"/>
+  <ellipse cx="350" cy="200" rx="60" ry="30" fill="rgba(255,255,255,0.08)" transform="rotate(20 350 200)"/>
+  <ellipse cx="120" cy="380" rx="50" ry="25" fill="rgba(255,255,255,0.06)" transform="rotate(-10 120 380)"/>
+  <circle cx="400" cy="400" r="20" fill="rgba(255,255,255,0.05)"/>
+  
+  <defs>
+    <linearGradient id="premiumGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A855F7"/>
+      <stop offset="20%" style="stop-color:#8B5CF6"/>
+      <stop offset="40%" style="stop-color:#7C3AED"/>
+      <stop offset="60%" style="stop-color:#6D28D9"/>
+      <stop offset="80%" style="stop-color:#5B21B6"/>
+      <stop offset="100%" style="stop-color:#4C1D95"/>
+    </linearGradient>
+    
+    <linearGradient id="outerGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.5"/>
+      <stop offset="50%" style="stop-color:#FFFFFF;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0.1"/>
+    </linearGradient>
+    
+    <linearGradient id="middleGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.4"/>
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0.2"/>
+    </linearGradient>
+  </defs>
+</svg>

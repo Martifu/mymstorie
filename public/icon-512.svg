@@ -1,0 +1,117 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo con gradiente moderno y bordes redondeados -->
+  <rect width="512" height="512" rx="115" fill="url(#modernGradient512)" />
+  
+  <!-- Múltiples capas de sombra para profundidad -->
+  <rect x="20" y="20" width="472" height="472" rx="95" fill="none" stroke="url(#innerGlow512)" stroke-width="4" opacity="0.4"/>
+  <rect x="40" y="40" width="432" height="432" rx="75" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/>
+  
+  <!-- Contenedor central -->
+  <g transform="translate(256, 256)">
+    <!-- Círculo central con glassmorphism -->
+    <circle r="180" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+    <circle r="160" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    
+    <!-- Elementos representativos organizados en círculo -->
+    
+    <!-- 1. Cámara (Recuerdos) - Superior -->
+    <g transform="translate(0, -80)">
+      <rect x="-25" y="-18" width="50" height="36" rx="6" fill="white" opacity="0.95" stroke="rgba(124,58,237,0.2)" stroke-width="1"/>
+      <circle r="12" fill="#7C3AED"/>
+      <circle r="6" fill="white"/>
+      <circle r="3" fill="#A855F7"/>
+      <rect x="-8" y="-28" width="16" height="10" rx="2" fill="white" opacity="0.8"/>
+      <!-- Flash -->
+      <path d="M20 -15L25 -10L20 -5L22 -10L20 -15Z" fill="white" opacity="0.7"/>
+    </g>
+    
+    <!-- 2. Corazón (Familia) - Superior derecha -->
+    <g transform="translate(57, -57)">
+      <path d="M0 25L-5 20C-15 11 -18 7 -18 2C-18 -2.5 -14.5 -6 -10 -6C-6.5 -6 -3 -4.5 -2 -2C-1 -4.5 2.5 -6 6 -6C10.5 -6 14 -2.5 14 2C14 7 11 11 1 20L-4 25H0Z" fill="white" opacity="0.95"/>
+      <!-- Pequeños corazones decorativos -->
+      <circle cx="15" cy="-8" r="3" fill="rgba(255,255,255,0.6)"/>
+      <circle cx="-15" cy="5" r="2" fill="rgba(255,255,255,0.4)"/>
+    </g>
+    
+    <!-- 3. Estrella (Objetivos) - Inferior derecha -->
+    <g transform="translate(57, 57)">
+      <path d="M0 -20L5 -5H20L8.5 5L13.5 20L0 12L-13.5 20L-8.5 5L-20 -5H-5L0 -20Z" fill="white" opacity="0.95"/>
+      <!-- Brillo en la estrella -->
+      <circle cx="-3" cy="-8" r="2" fill="rgba(255,255,255,0.8)"/>
+      <path d="M-8 -12L-5 -15L-2 -12" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" fill="none"/>
+    </g>
+    
+    <!-- 4. Bebé/Niño (Hitos) - Inferior -->
+    <g transform="translate(0, 80)">
+      <!-- Cabeza del bebé -->
+      <circle r="18" fill="white" opacity="0.95"/>
+      <!-- Cuerpo -->
+      <rect x="-20" y="5" width="40" height="25" rx="8" fill="white" opacity="0.9"/>
+      <!-- Ojos -->
+      <circle cx="-6" cy="-5" r="2.5" fill="#7C3AED"/>
+      <circle cx="6" cy="-5" r="2.5" fill="#7C3AED"/>
+      <!-- Sonrisa -->
+      <path d="M-8 2L0 8L8 2" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <!-- Brazos -->
+      <circle cx="-25" cy="15" r="6" fill="white" opacity="0.8"/>
+      <circle cx="25" cy="15" r="6" fill="white" opacity="0.8"/>
+      <!-- Decoración (chupete o juguete) -->
+      <circle cx="0" cy="35" r="4" fill="rgba(255,255,255,0.7)"/>
+    </g>
+    
+    <!-- 5. Calendario/Timeline (Hitos temporales) - Inferior izquierda -->
+    <g transform="translate(-57, 57)">
+      <rect x="-15" y="-18" width="30" height="36" rx="3" fill="white" opacity="0.9"/>
+      <!-- Líneas del calendario -->
+      <line x1="-10" y1="-12" x2="10" y2="-12" stroke="#7C3AED" stroke-width="1.5"/>
+      <line x1="-10" y1="-6" x2="10" y2="-6" stroke="#A855F7" stroke-width="1"/>
+      <line x1="-10" y1="0" x2="10" y2="0" stroke="#A855F7" stroke-width="1"/>
+      <line x1="-10" y1="6" x2="10" y2="6" stroke="#A855F7" stroke-width="1"/>
+      <line x1="-10" y1="12" x2="10" y2="12" stroke="#A855F7" stroke-width="1"/>
+      <!-- Punto destacado -->
+      <circle cx="5" cy="0" r="2" fill="#7C3AED"/>
+      <!-- Anillas del calendario -->
+      <rect x="-8" y="-22" width="3" height="8" rx="1.5" fill="white" opacity="0.7"/>
+      <rect x="5" y="-22" width="3" height="8" rx="1.5" fill="white" opacity="0.7"/>
+    </g>
+    
+    <!-- 6. Galería/Fotos (Recuerdos visuales) - Superior izquierda -->
+    <g transform="translate(-57, -57)">
+      <!-- Foto principal -->
+      <rect x="-15" y="-12" width="24" height="18" rx="2" fill="white" opacity="0.95"/>
+      <circle cx="-3" cy="-3" r="4" fill="#A855F7" opacity="0.8"/>
+      <!-- Fotos apiladas detrás -->
+      <rect x="-12" y="-9" width="24" height="18" rx="2" fill="rgba(255,255,255,0.7)"/>
+      <rect x="-9" y="-6" width="24" height="18" rx="2" fill="rgba(255,255,255,0.5)"/>
+      <!-- Elementos decorativos -->
+      <circle cx="8" cy="-15" r="2" fill="rgba(255,255,255,0.6)"/>
+      <circle cx="-12" cy="8" r="1.5" fill="rgba(255,255,255,0.4)"/>
+    </g>
+    
+    <!-- Texto "mym" en el centro con mejor tipografía -->
+    <text y="15" font-family="Arial, sans-serif" font-size="64" font-weight="bold" text-anchor="middle" fill="white" opacity="0.98">mym</text>
+    <!-- Subtítulo -->
+    <text y="40" font-family="Arial, sans-serif" font-size="16" font-weight="normal" text-anchor="middle" fill="rgba(255,255,255,0.8)">stories</text>
+  </g>
+  
+  <!-- Múltiples highlights para efecto premium -->
+  <ellipse cx="150" cy="120" rx="60" ry="30" fill="rgba(255,255,255,0.15)" transform="rotate(-20 150 120)"/>
+  <ellipse cx="380" cy="180" rx="40" ry="20" fill="rgba(255,255,255,0.1)" transform="rotate(15 380 180)"/>
+  <circle cx="100" cy="400" r="15" fill="rgba(255,255,255,0.08)"/>
+  
+  <defs>
+    <linearGradient id="modernGradient512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A855F7"/>
+      <stop offset="25%" style="stop-color:#8B5CF6"/>
+      <stop offset="50%" style="stop-color:#7C3AED"/>
+      <stop offset="75%" style="stop-color:#6D28D9"/>
+      <stop offset="100%" style="stop-color:#5B21B6"/>
+    </linearGradient>
+    
+    <linearGradient id="innerGlow512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.4"/>
+      <stop offset="50%" style="stop-color:#FFFFFF;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0.1"/>
+    </linearGradient>
+  </defs>
+</svg>

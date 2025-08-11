@@ -10,8 +10,9 @@ export function RootLayout() {
     const location = useLocation();
     const navigate = useNavigate();
     const isCreationPage = location.pathname.includes('/new') || location.pathname.includes('/edit');
-    const showFAB = !location.pathname.startsWith('/profile') && !isCreationPage;
-    const showNavbar = !isCreationPage;
+    const isDetailPage = location.pathname.includes('/memories/') && location.pathname.split('/').length > 2;
+    const showFAB = !location.pathname.startsWith('/profile') && !isCreationPage && !isDetailPage;
+    const showNavbar = !isCreationPage && !isDetailPage;
 
     if (loading) return <div className="p-6">Cargando…</div>;
     if (!user) {

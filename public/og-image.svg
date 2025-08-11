@@ -1,0 +1,113 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo con gradiente moderno -->
+  <rect width="1200" height="630" fill="url(#modernBgGradient)" />
+  
+  <!-- Elementos decorativos de fondo -->
+  <circle cx="100" cy="100" r="80" fill="rgba(255,255,255,0.05)" />
+  <circle cx="1100" cy="150" r="120" fill="rgba(255,255,255,0.03)" />
+  <circle cx="200" cy="500" r="60" fill="rgba(255,255,255,0.04)" />
+  <circle cx="1000" cy="450" r="90" fill="rgba(255,255,255,0.06)" />
+  
+  <!-- Formas geométricas modernas -->
+  <rect x="50" y="300" width="40" height="40" rx="8" fill="rgba(255,255,255,0.08)" transform="rotate(45 70 320)" />
+  <rect x="1050" y="200" width="60" height="60" rx="12" fill="rgba(255,255,255,0.06)" transform="rotate(30 1080 230)" />
+  
+  <!-- Contenedor principal -->
+  <g transform="translate(600, 315)">
+    
+    <!-- Logo circular moderno a la izquierda -->
+    <g transform="translate(-250, 0)">
+      <circle r="100" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+      
+      <!-- Elementos del logo organizados -->
+      <!-- Cámara (Recuerdos) -->
+      <g transform="translate(-35, -35)">
+        <rect x="-12" y="-8" width="24" height="16" rx="3" fill="white" opacity="0.9"/>
+        <circle r="5" fill="#7C3AED"/>
+        <circle r="2" fill="white"/>
+      </g>
+      
+      <!-- Corazón (Familia) -->
+      <g transform="translate(35, -35)">
+        <path d="M0 12L-2.5 9.5C-6.5 5.8 -8 4.2 -8 2C-8 0.2 -6.3 -1.5 -4.5 -1.5C-3.2 -1.5 -1.9 -0.8 -1.5 0C-1.1 -0.8 0.2 -1.5 1.5 -1.5C3.3 -1.5 5 0.2 5 2C5 4.2 3.5 5.8 -0.5 9.5L-3 12H0Z" fill="white" opacity="0.9"/>
+      </g>
+      
+      <!-- Estrella (Objetivos) -->
+      <g transform="translate(-35, 35)">
+        <path d="M0 -8L2 -2H8L3.5 2L5.5 8L0 5L-5.5 8L-3.5 2L-8 -2H-2L0 -8Z" fill="white" opacity="0.9"/>
+      </g>
+      
+      <!-- Bebé (Hitos) -->
+      <g transform="translate(35, 35)">
+        <circle r="6" fill="white" opacity="0.9"/>
+        <rect x="-8" y="2" width="16" height="8" rx="2" fill="white" opacity="0.8"/>
+        <circle cx="-2" cy="-1" r="1" fill="#7C3AED"/>
+        <circle cx="2" cy="-1" r="1" fill="#7C3AED"/>
+      </g>
+      
+      <!-- Texto mym en el centro -->
+      <text y="8" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="white">mym</text>
+    </g>
+    
+    <!-- Contenido de texto a la derecha -->
+    <g transform="translate(50, 0)">
+      <!-- Título principal -->
+      <text x="0" y="-60" font-family="Arial, sans-serif" font-size="56" font-weight="bold" fill="white">mymstorie</text>
+      
+      <!-- Subtítulo -->
+      <text x="0" y="-10" font-family="Arial, sans-serif" font-size="28" fill="rgba(255,255,255,0.9)">Tu rincón familiar privado ✨</text>
+      
+      <!-- Características principales -->
+      <g transform="translate(0, 40)">
+        <!-- Recuerdos -->
+        <g>
+          <circle cx="0" cy="0" r="8" fill="rgba(255,255,255,0.2)"/>
+          <rect x="-4" y="-3" width="8" height="6" rx="1" fill="white" opacity="0.8"/>
+          <circle cx="0" cy="0" r="2" fill="#A855F7"/>
+          <text x="25" y="5" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.85)">Guarda recuerdos preciosos</text>
+        </g>
+        
+        <!-- Objetivos -->
+        <g transform="translate(0, 35)">
+          <circle cx="0" cy="0" r="8" fill="rgba(255,255,255,0.2)"/>
+          <path d="M0 -5L1.5 -1H5L2.5 1.5L4 5L0 3L-4 5L-2.5 1.5L-5 -1H-1.5L0 -5Z" fill="white" opacity="0.9"/>
+          <text x="25" y="5" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.85)">Cumple objetivos familiares</text>
+        </g>
+        
+        <!-- Hitos -->
+        <g transform="translate(0, 70)">
+          <circle cx="0" cy="0" r="8" fill="rgba(255,255,255,0.2)"/>
+          <circle cx="0" cy="-2" r="3" fill="white" opacity="0.9"/>
+          <rect x="-4" y="1" width="8" height="4" rx="1" fill="white" opacity="0.8"/>
+          <text x="25" y="5" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.85)">Celebra hitos especiales</text>
+        </g>
+      </g>
+    </g>
+  </g>
+  
+  <!-- Elementos decorativos adicionales -->
+  <g opacity="0.1">
+    <!-- Líneas conectoras -->
+    <path d="M150 200Q300 150 450 200T750 250" stroke="white" stroke-width="2" fill="none"/>
+    <path d="M200 400Q400 350 600 400T1000 450" stroke="white" stroke-width="1.5" fill="none"/>
+    
+    <!-- Puntos decorativos -->
+    <circle cx="300" cy="180" r="3" fill="white"/>
+    <circle cx="500" cy="480" r="2" fill="white"/>
+    <circle cx="800" cy="120" r="4" fill="white"/>
+    <circle cx="950" cy="350" r="2.5" fill="white"/>
+  </g>
+  
+  <!-- Highlight principal -->
+  <ellipse cx="300" cy="150" rx="120" ry="60" fill="rgba(255,255,255,0.08)" transform="rotate(-15 300 150)"/>
+  
+  <defs>
+    <linearGradient id="modernBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1E293B"/>
+      <stop offset="25%" style="stop-color:#334155"/>
+      <stop offset="50%" style="stop-color:#475569"/>
+      <stop offset="75%" style="stop-color:#374151"/>
+      <stop offset="100%" style="stop-color:#111827"/>
+    </linearGradient>
+  </defs>
+</svg>

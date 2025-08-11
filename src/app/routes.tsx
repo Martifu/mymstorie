@@ -26,14 +26,10 @@ export const router = createBrowserRouter([
             { path: 'goals/:goalId', element: <GoalDetail /> },
             { path: 'child', element: <Child /> },
             { path: 'child/new', element: <NewChildEvent /> },
+            { path: 'memories/:spaceId/:entryId', element: <MemoryDetail /> },
             { path: 'profile', element: <Profile /> },
             { path: '*', element: <Navigate to="/" replace /> }
         ]
-    },
-    // Páginas de detalle sin FAB/navbar
-    {
-        path: '/memories/:spaceId/:entryId',
-        element: <MemoryDetail />
     }
 ]);
 

@@ -1,0 +1,62 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo con gradiente moderno y bordes redondeados -->
+  <rect width="192" height="192" rx="42" fill="url(#modernGradient192)" />
+  
+  <!-- Sombra interior sutil -->
+  <rect x="8" y="8" width="176" height="176" rx="34" fill="none" stroke="url(#innerGlow)" stroke-width="2" opacity="0.3"/>
+  
+  <!-- Contenedor central con elementos -->
+  <g transform="translate(96, 96)">
+    <!-- Círculo central con glassmorphism -->
+    <circle r="65" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+    
+    <!-- Elementos representativos organizados -->
+    
+    <!-- 1. Cámara (Recuerdos) - Superior izquierda -->
+    <g transform="translate(-25, -25)">
+      <rect x="-12" y="-8" width="24" height="16" rx="3" fill="white" opacity="0.9"/>
+      <circle r="5" fill="#7C3AED"/>
+      <circle r="2" fill="white"/>
+      <rect x="-3" y="-12" width="6" height="4" rx="1" fill="white" opacity="0.7"/>
+    </g>
+    
+    <!-- 2. Corazón (Familia) - Superior derecha -->
+    <g transform="translate(25, -25)">
+      <path d="M0 15L-3 12C-8 7.5 -10 5.5 -10 3C-10 0.8 -8.2 -1 -6 -1C-4.5 -1 -3 -0.3 -2.5 0.5C-2 -0.3 -0.5 -1 1 -1C3.2 -1 5 0.8 5 3C5 5.5 3 7.5 -2 12L-5 15H0Z" fill="white" opacity="0.9"/>
+    </g>
+    
+    <!-- 3. Estrella (Objetivos) - Inferior izquierda -->
+    <g transform="translate(-25, 25)">
+      <path d="M0 -10L2.5 -2.5H10L4.5 2.5L7 10L0 6L-7 10L-4.5 2.5L-10 -2.5H-2.5L0 -10Z" fill="white" opacity="0.9"/>
+    </g>
+    
+    <!-- 4. Bebé/Niño (Hitos) - Inferior derecha -->
+    <g transform="translate(25, 25)">
+      <circle r="6" fill="white" opacity="0.9"/>
+      <rect x="-8" y="2" width="16" height="10" rx="3" fill="white" opacity="0.8"/>
+      <circle cx="-2" cy="-2" r="1" fill="#7C3AED"/>
+      <circle cx="2" cy="-2" r="1" fill="#7C3AED"/>
+      <path d="M-3 1L0 3L3 1" stroke="#7C3AED" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    </g>
+    
+    <!-- Texto "mym" en el centro -->
+    <text y="8" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="white" opacity="0.95">mym</text>
+  </g>
+  
+  <!-- Highlight brillante -->
+  <ellipse cx="65" cy="50" rx="30" ry="15" fill="rgba(255,255,255,0.2)" transform="rotate(-15 65 50)"/>
+  
+  <defs>
+    <linearGradient id="modernGradient192" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A855F7"/>
+      <stop offset="30%" style="stop-color:#8B5CF6"/>
+      <stop offset="70%" style="stop-color:#7C3AED"/>
+      <stop offset="100%" style="stop-color:#6D28D9"/>
+    </linearGradient>
+    
+    <linearGradient id="innerGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0.1"/>
+    </linearGradient>
+  </defs>
+</svg>
