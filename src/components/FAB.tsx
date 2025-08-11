@@ -27,8 +27,8 @@ export function FAB({ onPick }: { onPick: (type: 'memory' | 'goal' | 'child_even
                 onClick={() => { setOpen(false); onPick('goal'); }}>
                 <DocumentText size={20} variant="Bold" color="#3B82F6" />
                 <div>
-                  <div className="text-sm font-semibold">Nueva meta</div>
-                  <div className="text-xs text-text-muted">Con fecha límite</div>
+                  <div className="text-sm font-semibold">Nuevo objetivo</div>
+                  <div className="text-xs text-text-muted">Metas familiares</div>
                 </div>
               </button>
               <button className="w-full flex items-center gap-3 px-4 py-3 hocus:bg-brand-gold/10"

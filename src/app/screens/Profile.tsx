@@ -3,7 +3,7 @@ import { useAuth } from '../../features/auth/useAuth';
 export function Profile() {
     const { user, signOutApp } = useAuth();
     return (
-        <div>
+        <div className="min-h-screen bg-gray-50 p-4">
             <h2 className="text-xl font-semibold">Perfil</h2>
             <div className="mt-3 rounded-2xl border bg-white p-4 shadow-soft">
                 <p className="text-sm">Sesión iniciada como:</p>

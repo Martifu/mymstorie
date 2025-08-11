@@ -6,9 +6,11 @@ import { Goals } from './screens/Goals';
 import { Child } from './screens/Child';
 import { Profile } from './screens/Profile';
 import NewMemory from './screens/NewMemory';
-import NewGoal from './screens/NewGoal';
 import NewChildEvent from './screens/NewChildEvent';
 import MemoryDetail from './screens/MemoryDetail';
+import { CompleteGoal } from './screens/CompleteGoal';
+import GoalDetail from './screens/GoalDetail';
+import NewGoal from './screens/NewGoal';
 
 export const router = createBrowserRouter([
     {
@@ -20,6 +22,8 @@ export const router = createBrowserRouter([
             { path: 'memories/new', element: <NewMemory /> },
             { path: 'goals', element: <Goals /> },
             { path: 'goals/new', element: <NewGoal /> },
+            { path: 'goals/:goalId/complete', element: <CompleteGoal /> },
+            { path: 'goals/:goalId', element: <GoalDetail /> },
             { path: 'child', element: <Child /> },
             { path: 'child/new', element: <NewChildEvent /> },
             { path: 'profile', element: <Profile /> },

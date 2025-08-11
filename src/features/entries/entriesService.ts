@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, serverTimestamp, setDoc, updateDoc, deleteField } from 'firebase/firestore';
+import { addDoc, collection, doc, serverTimestamp, setDoc, updateDoc, deleteField, getDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { auth, db, storage } from '../../lib/firebase';
 
@@ -68,35 +68,34 @@ export async function createMemory(spaceId: string, form: FormData, onProgress?:
 
 export async function createGoal(spaceId: string, form: FormData) {
   const title = String(form.get('title') || '');
-  const dueStr = String(form.get('dueDate'));
-  const dueDate = (() => {
-    const [y, m, d] = dueStr.split('-').map((n) => Number(n));
-    return new Date(y, (m || 1) - 1, d || 1);
-  })();
+  const goalCategory = String(form.get('goalCategory') || 'logro');
+  const goalIcon = String(form.get('goalIcon') || '🎯');
+  const status = String(form.get('status') || 'pending');
   const description = String(form.get('description') || '');
-  const tags = String(form.get('tags') || '')
-    .split(',')
-    .map((t) => t.trim())
-    .filter(Boolean);
+
+  // Para objetivos completados, manejar multimedia
   const files = form.getAll('media') as File[];
   const media: { id: string; url: string; type: 'image' | 'video'; storagePath: string }[] = [];
-  for (const file of files.slice(0, 10)) {
-    const id = crypto.randomUUID();
-    const path = `spaces/${spaceId}/entries/${id}/${file.name}`;
-    const refPath = ref(storage, path);
-    await uploadBytesResumable(refPath, file);
-    const url = await getDownloadURL(refPath);
-    media.push({ id, url, type: file.type.startsWith('video/') ? 'video' : 'image', storagePath: path });
+
+  if (status === 'completed' && files.length > 0) {
+    for (const file of files.slice(0, 10)) {
+      const id = crypto.randomUUID();
+      const path = `spaces/${spaceId}/entries/${id}/${file.name}`;
+      const refPath = ref(storage, path);
+      await uploadBytesResumable(refPath, file);
+      const url = await getDownloadURL(refPath);
+      media.push({ id, url, type: file.type.startsWith('video/') ? 'video' : 'image', storagePath: path });
+    }
   }
+
   const entry: any = {
     spaceId,
     type: 'goal' as const,
     title,
-    description,
+    goalCategory,
+    goalIcon,
+    status, // 'pending' o 'completed'
     date: new Date(),
-    dueDate,
-    status: 'active' as const,
-    tags,
     media,
     mediaCount: media.length,
     hasVideo: media.some((m) => m.type === 'video'),
@@ -104,6 +103,16 @@ export async function createGoal(spaceId: string, form: FormData) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
+
+  // Agregar descripción solo si existe (para objetivos completados)
+  if (description.trim()) {
+    entry.description = description;
+  }
+
+  // Si es completado, agregar fecha de completado
+  if (status === 'completed') {
+    entry.completedAt = serverTimestamp();
+  }
 
   // Remover campos undefined/vacíos
   Object.keys(entry).forEach(key => {
@@ -115,7 +124,7 @@ export async function createGoal(spaceId: string, form: FormData) {
   await addDoc(collection(db, `spaces/${spaceId}/entries`), entry);
 }
 
-export async function createChildEvent(spaceId: string, form: FormData, onProgress?: (fileName: string, progress: number) => void) {
+export async function createChildEvent(spaceId: string, form: FormData, onProgress?: (fileName: string, progress: number) => void, onBirthEvent?: (name: string, gender: 'male' | 'female', birthDate: Date) => Promise<void>) {
   console.log('createChildEvent iniciado');
   const title = String(form.get('title') || '');
   const milestoneType = String(form.get('milestoneType') || 'custom');
@@ -171,13 +180,28 @@ export async function createChildEvent(spaceId: string, form: FormData, onProgre
     }
   }
 
+  // Manejar evento de nacimiento
+  if (childCategory === 'birth') {
+    const childName = String(form.get('childName') || '');
+    const childGender = String(form.get('childGender') || 'male') as 'male' | 'female';
+
+    if (childName && onBirthEvent) {
+      try {
+        await onBirthEvent(childName, childGender, date);
+      } catch (error) {
+        console.error('Error updating child profile:', error);
+        throw new Error('Error al actualizar el perfil del hijo');
+      }
+    }
+  }
+
   const entry: any = {
     spaceId,
     type: 'child_event' as const,
     title: title || milestoneLabel,
     description,
     date,
-    childCategory, // 'birthday' | 'milestone' | 'memory' (para UI)
+    childCategory, // 'birthday' | 'milestone' | 'memory' | 'birth' (para UI)
     milestoneType,
     media,
     mediaCount: media.length,
@@ -186,6 +210,17 @@ export async function createChildEvent(spaceId: string, form: FormData, onProgre
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
+
+  // Agregar campos específicos del nacimiento
+  if (childCategory === 'birth') {
+    const childName = String(form.get('childName') || '');
+    const childGender = String(form.get('childGender') || 'male');
+    if (childName) {
+      entry.childName = childName;
+      entry.childGender = childGender;
+      entry.milestoneType = 'birth';
+    }
+  }
 
   // Solo añadir milestoneLabel si tiene valor
   if (milestoneType === 'custom' && milestoneLabel && milestoneLabel.trim()) {
@@ -220,4 +255,72 @@ export async function toggleHeart(spaceId: string, entryId: string, uid: string,
   } else {
     await updateDoc(refDoc, { [`reactions.${uid}`]: deleteField() as any });
   }
+}
+
+export async function updateGoalStatus(
+  spaceId: string,
+  goalId: string,
+  status: 'completed' | 'pending',
+  description?: string,
+  media?: File[],
+  onProgress?: (fileName: string, progress: number) => void
+) {
+  const refDoc = doc(db, `spaces/${spaceId}/entries/${goalId}`);
+
+  // Verificar que el documento existe
+  const docSnap = await getDoc(refDoc);
+  if (!docSnap.exists()) {
+    throw new Error('El objetivo no existe');
+  }
+
+  const updateData: any = {
+    status,
+    updatedAt: serverTimestamp()
+  };
+
+  // Solo agregar descripción y multimedia si se está completando
+  if (status === 'completed') {
+    updateData.completedAt = serverTimestamp();
+
+    if (description) {
+      updateData.description = description;
+    }
+
+    // Procesar multimedia si hay archivos
+    if (media && media.length > 0) {
+      const mediaUrls: { id: string; url: string; type: 'image' | 'video'; storagePath: string; }[] = [];
+
+      for (const file of media.slice(0, 10)) {
+        const id = crypto.randomUUID();
+        const path = `spaces/${spaceId}/entries/${goalId}/${file.name}`;
+        const refPath = ref(storage, path);
+
+        const uploadTask = uploadBytesResumable(refPath, file);
+
+        await new Promise<void>((resolve, reject) => {
+          uploadTask.on('state_changed',
+            (snapshot) => {
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              onProgress?.(file.name, progress);
+            },
+            reject,
+            async () => {
+              const url = await getDownloadURL(uploadTask.snapshot.ref);
+              mediaUrls.push({
+                id,
+                url,
+                type: file.type.startsWith('video/') ? 'video' : 'image',
+                storagePath: path
+              });
+              resolve();
+            }
+          );
+        });
+      }
+
+      updateData.media = mediaUrls;
+    }
+  }
+
+  await updateDoc(refDoc, updateData);
 }

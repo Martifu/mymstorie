@@ -1,18 +1,21 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { useAuth } from '../../features/auth/useAuth';
 import { useEntries, type EntryDoc } from '../../features/entries/useEntries';
-import { format } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ArrowUp, Plus, FlagBanner } from 'phosphor-react';
+import { ArrowUp, Plus, FlagBanner, PencilSimple, X, Check } from 'phosphor-react';
+import { useForm } from 'react-hook-form';
 import birthdayIcon from '../../assets/birthday-icon.svg';
 import milestoneIcon from '../../assets/milestone-icon.svg';
 import memoryIcon from '../../assets/memory-icon.svg';
+import birthIcon from '../../assets/birth-icon.svg';
 import { VerticalTimeline, VerticalTimelineElement } from 'react-vertical-timeline-component';
 import 'react-vertical-timeline-component/style.min.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { AppBar } from '../../components';
 
-type Category = 'memory' | 'birthday' | 'milestone';
+type Category = 'memory' | 'birthday' | 'milestone' | 'birth';
 
 function asDate(d: any): Date {
     // Normaliza fechas Firestore Timestamp o string a fecha local sin desfases
@@ -33,6 +36,7 @@ function getCategory(entry: EntryDoc): Category {
     // fallback por compatibilidad
     const milestoneType = (entry as any).milestoneType as string | undefined;
     const label = ((entry as any).milestoneLabel || entry.title || '') as string;
+    if (milestoneType === 'birth' || /nacimiento/i.test(label)) return 'birth';
     if (milestoneType === 'first_birthday' || /cumplea/i.test(label)) return 'birthday';
     return 'milestone';
 }
@@ -51,6 +55,12 @@ function categoryClasses(cat: Category) {
                 fg: 'text-pink-600',
                 bg: 'bg-pink-50',
             };
+        case 'birth':
+            return {
+                ring: 'ring-emerald-200',
+                fg: 'text-emerald-600',
+                bg: 'bg-emerald-50',
+            };
         default: // milestone/hito
             return {
                 ring: 'ring-brand-gold/30',
@@ -63,11 +73,77 @@ function categoryClasses(cat: Category) {
 export function Child() {
     const { spaceId } = useAuth();
     const navigate = useNavigate();
-    const [typeFilter, setTypeFilter] = useState<'all' | 'birthday' | 'milestone' | 'memory'>('all');
+    const [typeFilter, setTypeFilter] = useState<'all' | 'birthday' | 'milestone' | 'memory' | 'birth'>('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [showScrollToTop, setShowScrollToTop] = useState(false);
+    const [showEditDialog, setShowEditDialog] = useState(false);
+
     // Usar sólo la colección de Hitos del hijo
     const { entries } = useEntries(spaceId, 'child_event');
+
+    // Buscar evento de nacimiento
+    const birthEvent = useMemo(() => {
+        return entries
+            .filter((e) => e.type === 'child_event')
+            .find((e) => getCategory(e) === 'birth' || (e as any).milestoneType === 'birth');
+    }, [entries]);
+
+    // Form para editar nombre (después de definir birthEvent)
+    const { register, handleSubmit, setValue, formState: { isSubmitting } } = useForm<{ childName: string }>({
+        defaultValues: { childName: (birthEvent as any)?.childName || '' }
+    });
+
+    // Actualizar el formulario cuando cambie birthEvent
+    useEffect(() => {
+        if (birthEvent) {
+            setValue('childName', (birthEvent as any).childName || '');
+        }
+    }, [birthEvent, setValue]);
+
+    // Función para actualizar el nombre del hijo
+    const updateChildName = async (data: { childName: string }) => {
+        if (!spaceId || !birthEvent) return;
+
+        try {
+            // Importar updateDoc dinámicamente
+            const { updateDoc, doc } = await import('firebase/firestore');
+            const { db } = await import('../../lib/firebase');
+
+            const refDoc = doc(db, `spaces/${spaceId}/entries/${birthEvent.id}`);
+            await updateDoc(refDoc, {
+                childName: data.childName.trim()
+            });
+
+            setShowEditDialog(false);
+        } catch (error) {
+            console.error('Error al actualizar nombre:', error);
+        }
+    };
+
+    // Calcular edad desde el nacimiento
+    const calculateAge = (birthDate: Date) => {
+        const now = new Date();
+        const diffTime = Math.abs(now.getTime() - birthDate.getTime());
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 30) {
+            return `${diffDays} ${diffDays === 1 ? 'día' : 'días'}`;
+        } else if (diffDays < 365) {
+            const months = Math.floor(diffDays / 30);
+            const remainingDays = diffDays % 30;
+            if (remainingDays === 0) {
+                return `${months} ${months === 1 ? 'mes' : 'meses'}`;
+            }
+            return `${months} ${months === 1 ? 'mes' : 'meses'} y ${remainingDays} ${remainingDays === 1 ? 'día' : 'días'}`;
+        } else {
+            const years = Math.floor(diffDays / 365);
+            const remainingMonths = Math.floor((diffDays % 365) / 30);
+            if (remainingMonths === 0) {
+                return `${years} ${years === 1 ? 'año' : 'años'}`;
+            }
+            return `${years} ${years === 1 ? 'año' : 'años'} y ${remainingMonths} ${remainingMonths === 1 ? 'mes' : 'meses'}`;
+        }
+    };
 
     // Filtrar por tipo y búsqueda
     const events = useMemo(() => {
@@ -145,81 +221,63 @@ export function Child() {
     }, []);
 
     return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Hijo</h2>
-            </div>
-
-            {/* Filtros y búsqueda */}
-            <div className="space-y-3">
+        <div className="min-h-screen bg-gray-50 p-4 space-y-4">
+            <AppBar
+                title="Hijo"
+                subtitle="Los momentos más especiales de tu pequeño"
+                showSearch={true}
+                searchPlaceholder="Buscar eventos..."
+                searchValue={searchTerm}
+                onSearchChange={setSearchTerm}
+            >
+                {/* Filtros */}
                 <div className="flex gap-3">
                     <select
                         value={typeFilter}
                         onChange={(e) => setTypeFilter(e.target.value as any)}
-                        className="px-3 py-2 rounded-xl border bg-white text-sm"
+                        className="px-3 py-2 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple transition"
                     >
                         <option value="all">Todos los tipos</option>
+                        <option value="birth">🎉 Nacimiento</option>
                         <option value="birthday">🎂 Cumpleaños</option>
                         <option value="milestone">🚩 Hitos</option>
                         <option value="memory">🖼️ Recuerdos</option>
                     </select>
-                    <input
-                        type="text"
-                        placeholder="Buscar eventos..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-xl border bg-white text-sm placeholder-text-muted"
-                    />
                 </div>
-            </div>
+            </AppBar>
 
-            {/* Cabecera con meses y días (sólo los que tienen eventos) */}
-            <div className="sticky top-0 z-10 bg-surface pt-2 -mx-4 px-4 pb-2 border-b">
-                {/* Meses */}
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                    {monthKeysDesc.map((mk) => {
-                        const dt = new Date(mk + '-01');
-                        const label = format(dt, 'LLLL', { locale: es });
-                        const isSel = selectedMonth === mk;
-                        return (
-                            <button
-                                key={mk}
-                                onClick={() => {
-                                    setSelectedMonth(mk);
-                                    const firstDayInMonth = dayKeysDesc.find((d) => d.startsWith(mk));
-                                    if (firstDayInMonth) setSelectedDay(firstDayInMonth);
-                                }}
-                                className={`px-3 py-1.5 rounded-pill border whitespace-nowrap ${isSel ? 'bg-brand-purple text-white border-brand-purple' : 'bg-white'
-                                    }`}
-                            >
-                                {label.charAt(0).toUpperCase() + label.slice(1)}
-                                <span className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-brand-purple align-middle" />
-                            </button>
-                        );
-                    })}
-                </div>
-                {/* Días dentro del mes seleccionado */}
-                <div className="flex gap-2 overflow-x-auto">
-                    {daysInSelectedMonth.map((dk) => {
-                        const dt = new Date(dk);
-                        const isSel = selectedDay === dk;
-                        return (
-                            <button
-                                key={dk}
-                                onClick={() => scrollToDay(dk)}
-                                className={`px-3 py-1.5 rounded-2xl border text-left ${isSel ? 'bg-brand-purple text-white border-brand-purple' : 'bg-white'
-                                    }`}
-                            >
-                                <div className="text-sm font-semibold leading-none">{format(dt, 'd')}</div>
-                                <div className={`text-[11px] ${isSel ? 'text-white/90' : 'text-text-muted'}`}>
-                                    {format(dt, 'EEE', { locale: es })}
+            {/* Widget de información del hijo si existe evento de nacimiento */}
+            {birthEvent && (
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    onClick={() => setShowEditDialog(true)}
+                    className="mb-6 mx-4 p-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                >
+                    <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {(birthEvent as any).childName || 'Mi bebé'}
+                                </h3>
+                                <PencilSimple
+                                    size={16}
+                                    className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                />
+                            </div>
+                            <div className="text-sm text-gray-600 space-y-1">
+                                <div>
+                                    Nació el {format(asDate((birthEvent as any).date), "d 'de' LLLL 'de' yyyy", { locale: es })}
                                 </div>
-                                <div className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-purple" />
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
+                                <div className="font-medium text-brand-purple">
+                                    {calculateAge(asDate((birthEvent as any).date))} de vida
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
 
             {/* Timeline: TODOS los eventos, agrupados por día, del más reciente al más antiguo */}
             <div className="space-y-6">
@@ -230,7 +288,7 @@ export function Child() {
                         <div key={dk} ref={(el) => { dayRefs.current[dk] = el; }}>
                             <div className="sticky top-[98px] z-0 -mx-4 px-4">
                                 <div className="inline-block rounded-pill bg-brand-purple/10 text-brand-purple px-3 py-1 text-xs font-semibold">
-                                    {format(dayDate, "d 'de' LLLL 'de' yyyy", { locale: es })}
+                                    {format(addDays(dayDate, 1), "d 'de' LLLL 'de' yyyy", { locale: es })}
                                 </div>
                             </div>
                             <div className="mt-3">
@@ -264,15 +322,17 @@ export function Child() {
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                         {typeFilter === 'all' ? 'No hay eventos aún' :
-                            typeFilter === 'birthday' ? 'No hay cumpleaños registrados' :
-                                typeFilter === 'milestone' ? 'No hay hitos registrados' :
-                                    'No hay recuerdos del hijo'}
+                            typeFilter === 'birth' ? 'No hay eventos de nacimiento registrados' :
+                                typeFilter === 'birthday' ? 'No hay cumpleaños registrados' :
+                                    typeFilter === 'milestone' ? 'No hay hitos registrados' :
+                                        'No hay recuerdos del hijo'}
                     </h3>
                     <p className="text-gray-600 mb-6 max-w-sm mx-auto">
                         {typeFilter === 'all' ? 'Comienza registrando los primeros momentos especiales de tu pequeño' :
-                            typeFilter === 'birthday' ? 'Registra los cumpleaños y celebraciones especiales' :
-                                typeFilter === 'milestone' ? 'Documenta los logros y hitos importantes' :
-                                    'Guarda los recuerdos más preciados de tu hijo'}
+                            typeFilter === 'birth' ? 'Registra el momento más especial: ¡el nacimiento de tu bebé!' :
+                                typeFilter === 'birthday' ? 'Registra los cumpleaños y celebraciones especiales' :
+                                    typeFilter === 'milestone' ? 'Documenta los logros y hitos importantes' :
+                                        'Guarda los recuerdos más preciados de tu hijo'}
                     </p>
                     <button
                         onClick={() => navigate('/child/new')}
@@ -300,6 +360,83 @@ export function Child() {
                     </motion.button>
                 )}
             </AnimatePresence>
+
+            {/* Diálogo para editar nombre del hijo */}
+            <AnimatePresence>
+                {showEditDialog && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        onClick={() => setShowEditDialog(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl"
+                        >
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-gray-900">Editar nombre</h3>
+                                <button
+                                    onClick={() => setShowEditDialog(false)}
+                                    className="p-1 rounded-full hover:bg-gray-100 transition"
+                                >
+                                    <X size={20} className="text-gray-500" />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleSubmit(updateChildName)} className="space-y-4">
+                                <div>
+                                    <label htmlFor="childName" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Nombre del bebé
+                                    </label>
+                                    <input
+                                        id="childName"
+                                        type="text"
+                                        {...register('childName', {
+                                            required: 'El nombre es requerido',
+                                            minLength: { value: 1, message: 'El nombre no puede estar vacío' }
+                                        })}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple transition"
+                                        placeholder="Ingresa el nombre del bebé"
+                                        autoFocus
+                                    />
+                                </div>
+
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowEditDialog(false)}
+                                        className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="flex-1 px-4 py-3 bg-brand-purple text-white rounded-xl hover:bg-brand-purple/90 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                Guardando...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Check size={16} weight="bold" />
+                                                Guardar
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
@@ -312,6 +449,7 @@ function TimelineItem({ entry, onClick }: { entry: EntryDoc & { _date: Date }; o
 
     const getBadgeLabel = (cat: Category) => {
         switch (cat) {
+            case 'birth': return 'Nacimiento';
             case 'birthday': return 'Cumpleaños';
             case 'memory': return 'Recuerdo';
             default: return 'Hito';
@@ -320,6 +458,7 @@ function TimelineItem({ entry, onClick }: { entry: EntryDoc & { _date: Date }; o
 
     const getIconImage = (cat: Category) => {
         switch (cat) {
+            case 'birth': return birthIcon;
             case 'birthday': return birthdayIcon;
             case 'memory': return memoryIcon;
             default: return milestoneIcon;

@@ -11,8 +11,10 @@ type FormValues = {
     title: string; description?: string; date: string; tags?: string;
 };
 
-export function EntryForm({ onSubmit }: { onSubmit: (data: FormData, onProgress?: (fileName: string, progress: number) => void) => Promise<void> }) {
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>();
+export function EntryForm({ onSubmit, initialTitle = '' }: { onSubmit: (data: FormData, onProgress?: (fileName: string, progress: number) => void) => Promise<void>; initialTitle?: string }) {
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
+        defaultValues: { title: initialTitle }
+    });
     const [files, setFiles] = useState<FileWithPreview[]>([]);
     const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
 
