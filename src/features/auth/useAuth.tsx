@@ -10,6 +10,7 @@ type AuthContextType = {
     loading: boolean;
     signInWithGoogle: () => Promise<void>;
     signOutApp: () => Promise<void>;
+    checkAuthState: () => void;
     spaceId: string | null;
 };
 
@@ -194,17 +195,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         console.log('Sign in method detection:', { isStandalone, isIOS });
 
-        // Para iOS PWA, intentar popup primero y luego dar instrucciones si falla
+        // Para iOS PWA, no intentar autenticación automática - solo verificar estado actual
         if (isStandalone && isIOS) {
-            console.log('iOS PWA detected - trying popup first');
-            try {
-                await signInWithPopup(auth, provider);
+            console.log('iOS PWA detected - checking current auth state only');
+
+            // Solo verificar si ya hay una sesión activa, no intentar crear una nueva
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+                console.log('Found existing auth session in iOS PWA');
+                setUser(currentUser);
+                setLoading(false);
                 return;
-            } catch (error: any) {
-                console.log('iOS PWA popup failed, user needs to use Safari:', error);
-                // El error se manejará en el UI con el componente IOSPWAAuth
-                throw new Error('ios-pwa-auth-required');
             }
+
+            console.log('No existing session found in iOS PWA - user needs Safari');
+            // No hacer nada más - el UI mostrará IOSPWAAuth
+            return;
         }
 
         // Para navegadores normales y no-iOS PWA
@@ -240,7 +246,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await signOut(auth);
     };
 
-    const value = useMemo(() => ({ user, loading, signInWithGoogle, signOutApp, spaceId }), [user, loading, spaceId]);
+    const checkAuthState = () => {
+        console.log('Manual auth state check requested');
+        const currentUser = auth.currentUser;
+        if (currentUser && !user) {
+            console.log('Found user in manual check:', currentUser.displayName);
+            setUser(currentUser);
+            setLoading(false);
+        } else if (!currentUser) {
+            console.log('No user found in manual check');
+        } else {
+            console.log('User already set in state');
+        }
+    };
+
+    const value = useMemo(() => ({ user, loading, signInWithGoogle, signOutApp, checkAuthState, spaceId }), [user, loading, spaceId]);
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

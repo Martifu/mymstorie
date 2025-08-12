@@ -1,13 +1,25 @@
 import { motion } from 'framer-motion';
+import { auth } from '../lib/firebase';
 
 interface IOSPWAAuthProps {
-    onTryAgain: () => void;
+    onAuthCheck: () => void;
 }
 
-export function IOSPWAAuth({ onTryAgain }: IOSPWAAuthProps) {
+export function IOSPWAAuth({ onAuthCheck }: IOSPWAAuthProps) {
     const handleOpenSafari = () => {
         const currentUrl = window.location.origin;
         window.open(currentUrl, '_blank');
+    };
+
+    const handleCheckAuth = () => {
+        console.log('Checking auth state manually...');
+        if (auth.currentUser) {
+            console.log('Found authenticated user:', auth.currentUser.displayName);
+            onAuthCheck();
+        } else {
+            console.log('No authenticated user found');
+            alert('No se detectó una sesión activa. Asegúrate de haber iniciado sesión en Safari y vuelve a intentarlo.');
+        }
     };
 
     return (
@@ -58,7 +70,7 @@ export function IOSPWAAuth({ onTryAgain }: IOSPWAAuthProps) {
                     <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={onTryAgain}
+                        onClick={handleCheckAuth}
                         className="w-full bg-gray-100 text-gray-700 px-6 py-4 rounded-xl font-semibold hover:bg-gray-200 transition"
                     >
                         ✅ Ya inicié sesión

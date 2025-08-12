@@ -12,7 +12,7 @@ import { FAB } from '../../components';
 import { motion } from 'framer-motion';
 
 export function RootLayout() {
-    const { user, loading, signInWithGoogle } = useAuth();
+    const { user, loading, signInWithGoogle, checkAuthState } = useAuth();
     const { userProfile, loading: spacesLoading } = useSpaces();
     const location = useLocation();
     const navigate = useNavigate();
@@ -25,20 +25,19 @@ export function RootLayout() {
         userProfile: userProfile ? { currentSpaceId: userProfile.currentSpaceId } : null
     });
 
-    // Detectar si viene de autenticación externa (Safari)
+    // Detectar si viene de autenticación externa (Safari) - solo limpiar URL
     const urlParams = new URLSearchParams(location.search);
     const authParam = urlParams.get('auth');
     const returnParam = urlParams.get('return');
 
-    // Si viene de Safari con autenticación, intentar login automático
+    // Si viene de Safari, solo limpiar la URL sin intentar login automático
     React.useEffect(() => {
-        if (authParam === 'google' && returnParam === 'pwa' && !user && !loading) {
-            console.log('Detected auth return from Safari, attempting login...');
-            signInWithGoogle().catch(console.error);
-            // Limpiar URL
+        if (authParam === 'google' && returnParam === 'pwa') {
+            console.log('Detected auth return from Safari, cleaning URL...');
+            // Solo limpiar URL, no intentar login
             navigate('/', { replace: true });
         }
-    }, [authParam, returnParam, user, loading, signInWithGoogle, navigate]);
+    }, [authParam, returnParam, navigate]);
     const isCreationPage = location.pathname.includes('/new') || location.pathname.includes('/edit');
     const isDetailPage = location.pathname.includes('/memories/') && location.pathname.split('/').length > 2;
     const showFAB = !location.pathname.startsWith('/profile') && !isCreationPage && !isDetailPage;
@@ -81,7 +80,7 @@ export function RootLayout() {
             return (
                 <>
                     <DebugInfo />
-                    <IOSPWAAuth onTryAgain={signInWithGoogle} />
+                    <IOSPWAAuth onAuthCheck={checkAuthState} />
                 </>
             );
         }
