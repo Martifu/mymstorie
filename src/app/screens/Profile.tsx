@@ -143,7 +143,7 @@ export function Profile() {
                     <div className="relative">
                         <div className="w-20 h-20 rounded-full bg-brand-purple flex items-center justify-center overflow-hidden">
                             <SimpleImage
-                                src={currentPhotoURL}
+                                src={currentPhotoURL || ''}
                                 alt="Foto de perfil"
                                 className="w-full h-full object-cover"
                                 fallback={
