@@ -9,7 +9,7 @@ export function Memories() {
     const { spaceId } = useAuth();
     const { entries } = useEntries(spaceId, 'memory');
     return (
-        <div className="min-h-screen bg-gray-50 p-4">
+        <div className="bg-gray-50 p-4">
             <AppBar
                 title="Recuerdos"
                 subtitle="Tus momentos familiares más preciados"

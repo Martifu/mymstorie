@@ -205,7 +205,7 @@ export function Child() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 space-y-4">
+        <div className="bg-gray-50 p-4 space-y-4">
             <AppBar
                 title="Hijo"
                 subtitle="Los momentos más especiales de tu pequeño"

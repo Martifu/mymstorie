@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
+import { createContext, useContext, useEffect, useMemo, useState, useRef } from 'react';
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
@@ -20,46 +20,116 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [spaceId, setSpaceId] = useState<string | null>(null);
+    const initializingRef = useRef(false);
+    const unsubscribeRef = useRef<(() => void) | null>(null);
 
     useEffect(() => {
-        const unsub = onAuthStateChanged(auth, async (u) => {
-            setUser(u);
-            if (u) {
-                // Ensure user doc exists
-                const userRef = doc(db, 'users', u.uid);
-                const snap = await getDoc(userRef);
-                if (!snap.exists()) {
-                    await setDoc(userRef, {
-                        uid: u.uid,
-                        displayName: u.displayName,
-                        email: u.email,
-                        photoURL: u.photoURL,
-                        createdAt: serverTimestamp(),
-                        lastLoginAt: serverTimestamp(),
-                        fcmTokens: [],
-                        notificationPrefs: { entries: true, goals: true, reminders: true },
-                        spaceIds: [],
-                    });
-                } else {
-                    await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
-                }
-                // Obtener el perfil del usuario y su espacio actual
-                const userProfile = await getUserProfile(u.uid);
-                setSpaceId(userProfile?.currentSpaceId || null);
-                // Setup FCM and store token
-                try {
-                    const token = await setupMessaging();
-                    if (token) {
-                        await updateDoc(userRef, { fcmTokens: arrayUnion(token) });
-                    }
-                } catch { }
-            } else {
-                setSpaceId(null);
+        // Configurar persistencia de autenticación
+        const initializeAuth = async () => {
+            if (initializingRef.current) return;
+            initializingRef.current = true;
+
+            try {
+                await setPersistence(auth, browserLocalPersistence);
+            } catch (error) {
+                console.error('Error setting auth persistence:', error);
             }
-            setLoading(false);
-        });
-        return () => unsub();
-    }, []);
+
+            const unsub = onAuthStateChanged(auth, async (u) => {
+                try {
+                    setUser(u);
+                    if (u) {
+                        // Ensure user doc exists
+                        const userRef = doc(db, 'users', u.uid);
+                        const snap = await getDoc(userRef);
+                        if (!snap.exists()) {
+                            await setDoc(userRef, {
+                                uid: u.uid,
+                                displayName: u.displayName,
+                                email: u.email,
+                                photoURL: u.photoURL,
+                                createdAt: serverTimestamp(),
+                                lastLoginAt: serverTimestamp(),
+                                fcmTokens: [],
+                                notificationPrefs: { entries: true, goals: true, reminders: true },
+                                spaceIds: [],
+                            });
+                        } else {
+                            await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
+                        }
+                        // Obtener el perfil del usuario y su espacio actual
+                        try {
+                            const userProfile = await getUserProfile(u.uid);
+                            setSpaceId(userProfile?.currentSpaceId || null);
+                        } catch (profileError) {
+                            console.error('Error loading user profile:', profileError);
+                            setSpaceId(null);
+                        }
+                        // Setup FCM and store token - solicitar permisos al iniciar sesión
+                        try {
+                            console.log('Solicitando permisos de notificación...');
+                            const token = await setupMessaging();
+                            if (token) {
+                                console.log('Token FCM obtenido:', token);
+                                await updateDoc(userRef, {
+                                    fcmTokens: arrayUnion(token),
+                                    lastFCMTokenUpdate: serverTimestamp()
+                                });
+                                console.log('Token FCM guardado exitosamente');
+                            } else {
+                                console.warn('No se pudo obtener el token FCM');
+                            }
+                        } catch (fcmError) {
+                            console.error('Error configurando FCM:', fcmError);
+                        }
+                    } else {
+                        setSpaceId(null);
+                    }
+                } catch (error) {
+                    console.error('Error in auth state change:', error);
+                    // En caso de error, mantener el estado actual pero marcar como no cargando
+                } finally {
+                    setLoading(false);
+                }
+            });
+
+            unsubscribeRef.current = unsub;
+        };
+
+        initializeAuth();
+
+        // Manejar visibilidad de la página para iOS
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && auth.currentUser && !user) {
+                // Si hay un usuario autenticado en Firebase pero no en el estado local, restaurar
+                console.log('Restoring user session after page visibility change');
+                setUser(auth.currentUser);
+                setLoading(false);
+            }
+        };
+
+        const handleFocus = () => {
+            if (auth.currentUser && !user) {
+                // Restaurar estado de autenticación cuando la ventana recupera el foco
+                console.log('Restoring user session after window focus');
+                setUser(auth.currentUser);
+                setLoading(false);
+            }
+        };
+
+        // Listeners para manejar cambios de visibilidad y foco
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('focus', handleFocus);
+
+        // Cleanup
+        return () => {
+            if (unsubscribeRef.current) {
+                unsubscribeRef.current();
+            }
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, [user]);
 
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider();

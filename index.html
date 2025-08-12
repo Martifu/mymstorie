@@ -55,6 +55,24 @@
 
 <body class="font-sans">
   <div id="root"></div>
+  <script>
+    // Prevenir errores de MediaSession con acciones no soportadas
+    if ('mediaSession' in navigator) {
+      try {
+        // Solo configurar acciones válidas para evitar errores
+        const validActions = ['play', 'pause', 'previoustrack', 'nexttrack', 'seekbackward', 'seekforward'];
+        validActions.forEach(action => {
+          try {
+            navigator.mediaSession.setActionHandler(action, null);
+          } catch (e) {
+            // Ignorar errores de acciones no soportadas
+          }
+        });
+      } catch (e) {
+        console.warn('MediaSession setup failed:', e);
+      }
+    }
+  </script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 

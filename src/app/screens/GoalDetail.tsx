@@ -32,7 +32,7 @@ export default function GoalDetail() {
 
     if (!currentGoal) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className=" bg-gray-50 flex items-center justify-center">
                 <LoadingSpinner text="Cargando objetivo..." variant="dots" size="lg" />
             </div>
         );
@@ -45,7 +45,7 @@ export default function GoalDetail() {
     const media = goalData.media || [];
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4">
+        <div className=" bg-gray-50 p-4">
             <div className="mx-auto max-w-screen-sm">
                 {/* Header */}
                 <motion.div

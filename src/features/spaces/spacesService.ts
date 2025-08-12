@@ -194,11 +194,15 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
 // Subir foto de perfil
 export async function uploadProfilePhoto(userId: string, file: File): Promise<string> {
     const fileExtension = file.name.split('.').pop();
-    const fileName = `profile-photos/${userId}.${fileExtension}`;
+    const timestamp = Date.now();
+    const fileName = `profile-photos/${userId}_${timestamp}.${fileExtension}`;
     const storageRef = ref(storage, fileName);
 
     const snapshot = await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
+    let downloadURL = await getDownloadURL(snapshot.ref);
+
+    // Añadir timestamp como query parameter para evitar caché
+    downloadURL = `${downloadURL}?t=${timestamp}`;
 
     // Actualizar el perfil del usuario con la nueva foto
     await updateUserProfile(userId, { photoURL: downloadURL });

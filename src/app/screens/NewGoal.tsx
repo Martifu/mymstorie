@@ -72,7 +72,7 @@ export default function NewGoal() {
     });
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4">
+        <div className=" bg-gray-50 p-4">
             <div className="mx-auto max-w-screen-sm">
                 {/* Header */}
                 <motion.div

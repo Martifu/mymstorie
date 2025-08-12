@@ -29,7 +29,7 @@ export function Goals() {
     }, [entries]);
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4">
+        <div className="bg-gray-50 p-4">
             <AppBar
                 title="Objetivos"
                 subtitle="Tus metas familiares y sueños por cumplir"

@@ -55,7 +55,7 @@ export default function MemoryDetail() {
     const entry = [...memories, ...goals, ...childEvents].find(e => e.id === entryId);
 
     if (!entry) return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className=" bg-gray-50 flex items-center justify-center">
             <LoadingSpinner text="Cargando detalles..." variant="pulse" size="lg" />
         </div>
     );
@@ -64,7 +64,7 @@ export default function MemoryDetail() {
     const categoryIcon = getCategoryIcon(entry);
 
     return (
-        <div className="min-h-dvh bg-surface text-text">
+        <div className="min-h-dvh bg-gray-50 text-text">
             <div className="relative">
                 <div className="aspect-[4/5] bg-surface-muted overflow-hidden rounded-2xl m-3">
                     {cover?.type === 'image' ? (

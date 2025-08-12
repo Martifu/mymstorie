@@ -64,6 +64,13 @@ export function useSpaces() {
             }
         } catch (error) {
             console.error('Error loading user data:', error);
+            // En caso de error, intentar recargar después de un breve delay
+            setTimeout(() => {
+                if (user) {
+                    console.log('Retrying to load user data after error');
+                    loadUserData();
+                }
+            }, 2000);
         } finally {
             setLoading(false);
         }

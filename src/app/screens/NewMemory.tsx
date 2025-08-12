@@ -14,7 +14,7 @@ export default function NewMemory() {
         navigate('/');
     }
     return (
-        <div className="min-h-screen bg-gray-50 p-4">
+        <div className="bg-gray-50 p-4">
             <h2 className="text-xl font-semibold mb-2">Nuevo recuerdo</h2>
             <EntryForm onSubmit={onSubmit} initialTitle={prefilledTitle} />
         </div>

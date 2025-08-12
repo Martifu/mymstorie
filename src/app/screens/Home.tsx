@@ -7,6 +7,7 @@ import { Camera, Baby, Target, Heart, Plus, Bell } from 'phosphor-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { SimpleImage } from '../../components';
 
 export function Home() {
     const { spaceId, user } = useAuth();
@@ -117,24 +118,23 @@ export function Home() {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="min-h-screen bg-gray-50"
+            className="bg-gray-50"
         >
             {/* Header con perfil y notificaciones */}
             <motion.div variants={itemVariants} className="pt-6 pb-4">
                 <div className="flex items-center justify-between mb-4 px-4">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-gradient-to-br from-brand-purple to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
-                            {userProfile?.photoURL || user?.photoURL ? (
-                                <img
-                                    src={userProfile?.photoURL || user?.photoURL || ''}
-                                    alt="Foto de perfil"
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <span className="text-white font-bold text-lg">
-                                    {userName?.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2) || '👨‍👩‍👧‍👦'}
-                                </span>
-                            )}
+                            <SimpleImage
+                                src={userProfile?.photoURL || user?.photoURL || ''}
+                                alt="Foto de perfil"
+                                className="w-full h-full object-cover"
+                                fallback={
+                                    <span className="text-white font-bold text-lg">
+                                        {userName?.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2) || '👨‍👩‍👧‍👦'}
+                                    </span>
+                                }
+                            />
                         </div>
                         <div>
                             <p className="text-sm text-gray-500">¡Hola {userName}!</p>
@@ -219,20 +219,25 @@ export function Home() {
 
                 <div className="space-y-3 px-4">
                     {/* Mostrar recuerdos recientes */}
-                    {feedData.memories.slice(0, 2).map((memory, index) => (
-                        <ActivityFeedItem
-                            key={`memory-${memory.id}`}
-                            type="memory"
-                            title={memory.title}
-                            subtitle={memory.description || "Nuevo recuerdo guardado"}
-                            time={format((memory as any).date?.toDate?.() || new Date(memory.date), "d 'de' MMM", { locale: es })}
-                            avatar="📸"
-                            hasMedia={memory.media && memory.media.length > 0}
-                            mediaUrl={memory.media?.[0]?.url}
-                            onClick={() => navigate(`/memories/${spaceId}/${memory.id}`)}
-                            index={index}
-                        />
-                    ))}
+                    {feedData.memories.slice(0, 2).map((memory, index) => {
+                        const hasMedia = memory.media && Array.isArray(memory.media) && memory.media.length > 0;
+                        const mediaUrl = hasMedia && memory.media ? memory.media[0]?.url : undefined;
+
+                        return (
+                            <ActivityFeedItem
+                                key={`memory-${memory.id}`}
+                                type="memory"
+                                title={memory.title}
+                                subtitle={memory.description || "Nuevo recuerdo guardado"}
+                                time={format((memory as any).date?.toDate?.() || new Date(memory.date), "d 'de' MMM", { locale: es })}
+                                avatar="📸"
+                                hasMedia={hasMedia}
+                                mediaUrl={mediaUrl}
+                                onClick={() => navigate(`/memories/${spaceId}/${memory.id}`)}
+                                index={index}
+                            />
+                        );
+                    })}
 
                     {/* Mostrar eventos del hijo */}
                     {feedData.childEvents.slice(0, 2).map((event, index) => (
@@ -452,16 +457,21 @@ function ActivityFeedItem({
         >
             <div className="flex items-start gap-3">
                 <div className="relative">
-                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                        {hasMedia && mediaUrl ? (
-                            <img
-                                src={mediaUrl}
-                                alt={title}
-                                className="w-12 h-12 rounded-full object-cover"
-                            />
-                        ) : (
-                            <span className="text-xl">{avatar}</span>
-                        )}
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                        <SimpleImage
+                            src={hasMedia && mediaUrl ? mediaUrl : undefined}
+                            alt={title}
+                            className="w-12 h-12 rounded-full object-cover"
+                            fallback={
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <span className="text-xl">{avatar}</span>
+                                    {hasMedia && mediaUrl && (
+                                        <div className="absolute inset-0 bg-red-100 opacity-20 rounded-full" title="Image failed to load" />
+                                    )}
+                                </div>
+                            }
+                            onError={() => console.warn('Failed to load activity feed image:', mediaUrl)}
+                        />
                     </div>
                     <div className={`absolute -bottom-1 -right-1 w-4 h-4 ${getStatusColor()} rounded-full border-2 border-white`} />
                 </div>

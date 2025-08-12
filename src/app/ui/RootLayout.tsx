@@ -50,8 +50,8 @@ export function RootLayout() {
     }
 
     return (
-        <div className="min-h-dvh bg-surface text-text pb-20">
-            <div className="mx-auto max-w-screen-sm">
+        <div className="min-h-dvh bg-gray-50 text-text pb-20">
+            <div className="mx-auto max-w-screen-sm min-h-[calc(100dvh-5rem)]">
                 <Outlet />
             </div>
             {showFAB && (

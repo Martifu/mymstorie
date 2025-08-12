@@ -4,6 +4,7 @@ import { useSpaces } from '../../features/spaces/useSpaces';
 import { useMemo, useRef, useState } from 'react';
 import { Camera, Target, Baby, CheckCircle, Clock, PencilSimple, Plus, Copy, Share, X } from 'phosphor-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SimpleImage } from '../../components';
 
 export function Profile() {
     const { user, signOutApp, spaceId } = useAuth();
@@ -127,7 +128,7 @@ export function Profile() {
         }
     };
     return (
-        <div className="min-h-screen bg-gray-50 p-4">
+        <div className="bg-gray-50 p-4">
             <h2 className="text-xl font-semibold mb-6">Perfil</h2>
 
             {/* Información del usuario */}
@@ -141,17 +142,16 @@ export function Profile() {
                 <div className="flex items-center gap-4 mb-4">
                     <div className="relative">
                         <div className="w-20 h-20 rounded-full bg-brand-purple flex items-center justify-center overflow-hidden">
-                            {currentPhotoURL ? (
-                                <img
-                                    src={currentPhotoURL}
-                                    alt="Foto de perfil"
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <span className="text-white font-bold text-xl">
-                                    {getInitials(user?.displayName || user?.email?.split('@')[0] || 'U')}
-                                </span>
-                            )}
+                            <SimpleImage
+                                src={currentPhotoURL}
+                                alt="Foto de perfil"
+                                className="w-full h-full object-cover"
+                                fallback={
+                                    <span className="text-white font-bold text-xl">
+                                        {getInitials(user?.displayName || user?.email?.split('@')[0] || 'U')}
+                                    </span>
+                                }
+                            />
                         </div>
 
                         {/* Botón para cambiar foto */}
