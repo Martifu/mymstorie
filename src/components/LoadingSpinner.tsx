@@ -130,7 +130,7 @@ export function LoadingSpinner({
 // Componente para pantallas de carga completas
 export function FullScreenLoader({ text = "Cargando...", variant = 'heart' }: { text?: string; variant?: 'heart' | 'dots' | 'pulse' }) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
             <LoadingSpinner
                 size="lg"
                 text={text}

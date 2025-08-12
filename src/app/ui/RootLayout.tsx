@@ -12,7 +12,7 @@ import { FAB } from '../../components';
 import { motion } from 'framer-motion';
 
 export function RootLayout() {
-    const { user, loading, signInWithGoogle } = useAuth();
+    const { user, loading, signInWithEmail, signUpWithEmail, resetPassword } = useAuth();
     const { userProfile, loading: spacesLoading } = useSpaces();
     const location = useLocation();
     const navigate = useNavigate();
@@ -41,7 +41,12 @@ export function RootLayout() {
         }
 
         // Mostrar pantalla de login rediseñada
-        return <Login onSignIn={signInWithGoogle} loading={loading} />;
+        return <Login
+            onSignIn={signInWithEmail}
+            onSignUp={signUpWithEmail}
+            onResetPassword={resetPassword}
+            loading={loading}
+        />;
     }
 
     // Si el usuario no tiene un espacio actual, mostrar selección de espacios
@@ -50,8 +55,8 @@ export function RootLayout() {
     }
 
     return (
-        <div className="min-h-dvh bg-surface text-text pb-20">
-            <div className="mx-auto max-w-screen-sm min-h-[calc(100dvh-5rem)]">
+        <div className="min-h-dvh bg-gray-50 text-text pb-20">
+            <div className="mx-auto max-w-screen-sm">
                 <Outlet />
             </div>
             {showFAB && (

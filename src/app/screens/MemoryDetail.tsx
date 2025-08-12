@@ -64,7 +64,7 @@ export default function MemoryDetail() {
     const categoryIcon = getCategoryIcon(entry);
 
     return (
-        <div className="min-h-dvh bg-surface text-text">
+        <div className="min-h-screen bg-gray-50 text-text">
             <div className="relative">
                 <div className="aspect-[4/5] bg-surface-muted overflow-hidden rounded-2xl m-3">
                     {cover?.type === 'image' ? (

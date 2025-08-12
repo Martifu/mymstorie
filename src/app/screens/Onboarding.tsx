@@ -70,7 +70,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex flex-col">
+        <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Header con logo */}
             <div className="pt-12 pb-6 text-center">
                 <motion.div
