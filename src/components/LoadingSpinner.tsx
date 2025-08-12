@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Heart, Spinner } from 'phosphor-react';
+import { Heart } from 'phosphor-react';
 
 interface LoadingSpinnerProps {
     size?: 'sm' | 'md' | 'lg';
