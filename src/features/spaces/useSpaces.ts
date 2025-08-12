@@ -46,9 +46,16 @@ export function useSpaces() {
         try {
             setLoading(true);
             console.log('Loading user data for iOS PWA Debug:', user.uid);
-            const profile = await getUserProfile(user.uid);
+
+            // Timeout de seguridad para useSpaces
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('User data loading timeout')), 10000);
+            });
+
+            const profilePromise = getUserProfile(user.uid);
+            const profile = await Promise.race([profilePromise, timeoutPromise]);
             console.log('User profile loaded:', profile);
-            setUserProfile(profile);
+            setUserProfile(profile as any);
 
             if (profile) {
                 const spaces = await getUserSpaces(user.uid);
@@ -64,8 +71,15 @@ export function useSpaces() {
                     setSpaceCode(code);
                 }
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error loading user data:', error);
+
+            if (error.message === 'User data loading timeout') {
+                console.warn('User data loading timeout - setting loading to false');
+                setLoading(false);
+                return;
+            }
+
             // En caso de error, intentar recargar después de un breve delay
             setTimeout(() => {
                 if (user) {

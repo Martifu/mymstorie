@@ -23,6 +23,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribeRef = useRef<(() => void) | null>(null);
 
     useEffect(() => {
+        let loadingTimeout: NodeJS.Timeout;
+
         // Configurar persistencia de autenticación
         const initializeAuth = async () => {
             if (initializingRef.current) return;
@@ -34,20 +36,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 console.error('Error setting auth persistence:', error);
             }
 
-            // Manejar resultado de redirect para PWAs en iOS
+            // Manejar resultado de redirect para PWAs en iOS con timeout
             try {
-                const result = await getRedirectResult(auth);
-                if (result) {
+                const redirectPromise = getRedirectResult(auth);
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Redirect timeout')), 10000);
+                });
+
+                const result = await Promise.race([redirectPromise, timeoutPromise]);
+                if (result && typeof result === 'object' && 'user' in result) {
                     console.log('Redirect result received:', result.user);
                     // El usuario ya se manejará en onAuthStateChanged
                 }
-            } catch (error) {
-                console.error('Error handling redirect result:', error);
+            } catch (error: any) {
+                if (error.message === 'Redirect timeout') {
+                    console.warn('Redirect result timeout - continuing without redirect result');
+                } else {
+                    console.error('Error handling redirect result:', error);
+                }
             }
+
+            // Timeout de seguridad para evitar loading infinito
+            loadingTimeout = setTimeout(() => {
+                console.warn('Auth loading timeout - forcing loading to false');
+                setLoading(false);
+            }, 15000); // 15 segundos timeout
 
             const unsub = onAuthStateChanged(auth, async (u) => {
                 try {
                     console.log('Auth state changed - iOS PWA Debug:', u ? { uid: u.uid, displayName: u.displayName } : null);
+                    clearTimeout(loadingTimeout); // Cancelar timeout si la auth responde
                     setUser(u);
                     if (u) {
                         // Ensure user doc exists
@@ -96,9 +114,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     } else {
                         setSpaceId(null);
                     }
-                } catch (error) {
+                } catch (error: any) {
                     console.error('Error in auth state change:', error);
-                    // En caso de error, mantener el estado actual pero marcar como no cargando
+
+                    // Manejo específico de errores de red
+                    if (error?.code === 'auth/network-request-failed' || error?.message?.includes('network')) {
+                        console.warn('Network error in auth state - will retry on next state change');
+                        // No cambiar el estado del usuario en caso de errores de red
+                        setLoading(false);
+                        return;
+                    }
+
+                    // Para otros errores, limpiar el estado
+                    setUser(null);
+                    setSpaceId(null);
                 } finally {
                     setLoading(false);
                 }
@@ -134,6 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Cleanup
         return () => {
+            clearTimeout(loadingTimeout);
             if (unsubscribeRef.current) {
                 unsubscribeRef.current();
             }
@@ -161,8 +191,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 console.log('Using signInWithPopup for normal browser');
                 await signInWithPopup(auth, provider);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Sign in error:', error);
+
+            // Manejo específico de errores de red en iOS PWA
+            if (error?.code === 'auth/network-request-failed') {
+                console.log('Network error detected, retrying with different approach...');
+
+                // Esperar un momento y reintentar
+                setTimeout(async () => {
+                    try {
+                        if (isStandalone && isIOS) {
+                            // Reintentar con redirect
+                            await signInWithRedirect(auth, provider);
+                        } else {
+                            await signInWithPopup(auth, provider);
+                        }
+                    } catch (retryError) {
+                        console.error('Retry failed:', retryError);
+                        // Mostrar mensaje de error al usuario
+                        alert('Error de conexión. Por favor, verifica tu conexión a internet e inténtalo de nuevo.');
+                    }
+                }, 2000);
+
+                return; // No lanzar el error inicial
+            }
+
             throw error;
         }
     };

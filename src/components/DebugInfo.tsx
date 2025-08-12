@@ -27,6 +27,10 @@ export function DebugInfo() {
                 <strong>PWA:</strong> Standalone: {((window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches).toString()},
                 iOS: {(/iPad|iPhone|iPod/.test(navigator.userAgent)).toString()}
             </div>
+            <div className="mt-1 text-xs">
+                <strong>Network:</strong> {navigator.onLine ? '🟢 Online' : '🔴 Offline'} |
+                <strong> Connection:</strong> {(navigator as any).connection?.effectiveType || 'unknown'}
+            </div>
         </div>
     );
 }
