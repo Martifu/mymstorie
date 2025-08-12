@@ -10,7 +10,7 @@ type AuthContextType = {
     loading: boolean;
     signInWithGoogle: () => Promise<void>;
     signOutApp: () => Promise<void>;
-    checkAuthState: () => void;
+    checkAuthState: () => Promise<void>;
     spaceId: string | null;
 };
 
@@ -30,6 +30,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const initializeAuth = async () => {
             if (initializingRef.current) return;
             initializingRef.current = true;
+
+            // Detectar iOS PWA y evitar completamente Firebase Auth
+            const isStandalone = (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches;
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+            if (isStandalone && isIOS) {
+                console.log('iOS PWA detected - completely skipping Firebase Auth initialization');
+                setLoading(false);
+                return;
+            }
 
             try {
                 await setPersistence(auth, browserLocalPersistence);
@@ -246,12 +256,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await signOut(auth);
     };
 
-    const checkAuthState = () => {
+    const checkAuthState = async () => {
         console.log('Manual auth state check requested');
         const currentUser = auth.currentUser;
         if (currentUser && !user) {
             console.log('Found user in manual check:', currentUser.displayName);
             setUser(currentUser);
+
+            // Cargar el perfil del usuario para obtener el spaceId
+            try {
+                const userProfile = await getUserProfile(currentUser.uid);
+                setSpaceId(userProfile?.currentSpaceId || null);
+            } catch (profileError) {
+                console.error('Error loading user profile:', profileError);
+                setSpaceId(null);
+            }
+
             setLoading(false);
         } else if (!currentUser) {
             console.log('No user found in manual check');
