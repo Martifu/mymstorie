@@ -120,7 +120,7 @@ export function Login({ onSignIn, loading }: LoginProps) {
                         className="w-full bg-gradient-to-r from-brand-purple to-brand-blue hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-4 px-6 rounded-2xl shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3 relative overflow-hidden"
                     >
                         {/* Efecto de brillo */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer"></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-pulse"></div>
 
                         {loading ? (
                             <>
@@ -163,15 +163,7 @@ export function Login({ onSignIn, loading }: LoginProps) {
                 <p className="text-gray-400 text-xs">v1.0.0 • mymstorie.vercel.app</p>
             </motion.div>
 
-            <style jsx>{`
-                @keyframes shimmer {
-                    0% { transform: translateX(-100%); }
-                    100% { transform: translateX(100%); }
-                }
-                .animate-shimmer {
-                    animation: shimmer 2s infinite;
-                }
-            `}</style>
+
         </div>
     );
 }
