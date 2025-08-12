@@ -1,10 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState, useRef } from 'react';
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { getUserProfile } from '../spaces/spacesService';
-import { setupMessaging } from '../../lib/firebase';
 
 type AuthContextType = {
     user: User | null;
@@ -35,8 +34,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 console.error('Error setting auth persistence:', error);
             }
 
+            // Manejar resultado de redirect para PWAs en iOS
+            try {
+                const result = await getRedirectResult(auth);
+                if (result) {
+                    console.log('Redirect result received:', result.user);
+                    // El usuario ya se manejará en onAuthStateChanged
+                }
+            } catch (error) {
+                console.error('Error handling redirect result:', error);
+            }
+
             const unsub = onAuthStateChanged(auth, async (u) => {
                 try {
+                    console.log('Auth state changed - iOS PWA Debug:', u ? { uid: u.uid, displayName: u.displayName } : null);
                     setUser(u);
                     if (u) {
                         // Ensure user doc exists
@@ -65,23 +76,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             console.error('Error loading user profile:', profileError);
                             setSpaceId(null);
                         }
-                        // Setup FCM and store token - solicitar permisos al iniciar sesión
-                        try {
-                            console.log('Solicitando permisos de notificación...');
-                            const token = await setupMessaging();
-                            if (token) {
-                                console.log('Token FCM obtenido:', token);
-                                await updateDoc(userRef, {
-                                    fcmTokens: arrayUnion(token),
-                                    lastFCMTokenUpdate: serverTimestamp()
-                                });
-                                console.log('Token FCM guardado exitosamente');
-                            } else {
-                                console.warn('No se pudo obtener el token FCM');
-                            }
-                        } catch (fcmError) {
-                            console.error('Error configurando FCM:', fcmError);
-                        }
+                        // Setup FCM and store token - TEMPORALMENTE COMENTADO PARA iOS PWA
+                        // try {
+                        //     console.log('Solicitando permisos de notificación...');
+                        //     const token = await setupMessaging();
+                        //     if (token) {
+                        //         console.log('Token FCM obtenido:', token);
+                        //         await updateDoc(userRef, { 
+                        //             fcmTokens: arrayUnion(token),
+                        //             lastFCMTokenUpdate: serverTimestamp()
+                        //         });
+                        //         console.log('Token FCM guardado exitosamente');
+                        //     } else {
+                        //         console.warn('No se pudo obtener el token FCM');
+                        //     }
+                        // } catch (fcmError) {
+                        //     console.error('Error configurando FCM:', fcmError);
+                        // }
                     } else {
                         setSpaceId(null);
                     }
@@ -133,7 +144,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
+
+        // Detectar si está corriendo como PWA (instalada en iOS)
+        const isStandalone = (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches;
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+        console.log('Sign in method detection:', { isStandalone, isIOS });
+
+        try {
+            if (isStandalone && isIOS) {
+                // Usar redirect para PWAs en iOS
+                console.log('Using signInWithRedirect for iOS PWA');
+                await signInWithRedirect(auth, provider);
+            } else {
+                // Usar popup para navegadores normales
+                console.log('Using signInWithPopup for normal browser');
+                await signInWithPopup(auth, provider);
+            }
+        } catch (error) {
+            console.error('Sign in error:', error);
+            throw error;
+        }
     };
 
     const signOutApp = async () => {

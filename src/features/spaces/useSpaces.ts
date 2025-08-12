@@ -45,7 +45,9 @@ export function useSpaces() {
 
         try {
             setLoading(true);
+            console.log('Loading user data for iOS PWA Debug:', user.uid);
             const profile = await getUserProfile(user.uid);
+            console.log('User profile loaded:', profile);
             setUserProfile(profile);
 
             if (profile) {

@@ -6,7 +6,7 @@ import { useSpaces } from '../../features/spaces/useSpaces';
 import { SpaceSelection } from '../screens/SpaceSelection';
 import { Onboarding } from '../screens/Onboarding';
 import { Login } from '../screens/Login';
-import { FullScreenLoader } from '../../components';
+import { FullScreenLoader, DebugInfo } from '../../components';
 import { Home2, Image, DocumentText, Profile as ProfileIcon, People } from 'iconsax-react';
 import { FAB } from '../../components';
 import { motion } from 'framer-motion';
@@ -16,6 +16,14 @@ export function RootLayout() {
     const { userProfile, loading: spacesLoading } = useSpaces();
     const location = useLocation();
     const navigate = useNavigate();
+
+    // Debug logs temporales para iOS PWA
+    console.log('RootLayout Debug:', {
+        user: user ? { uid: user.uid, displayName: user.displayName } : null,
+        loading,
+        spacesLoading,
+        userProfile: userProfile ? { currentSpaceId: userProfile.currentSpaceId } : null
+    });
     const isCreationPage = location.pathname.includes('/new') || location.pathname.includes('/edit');
     const isDetailPage = location.pathname.includes('/memories/') && location.pathname.split('/').length > 2;
     const showFAB = !location.pathname.startsWith('/profile') && !isCreationPage && !isDetailPage;
@@ -32,25 +40,46 @@ export function RootLayout() {
     };
 
     if (loading || spacesLoading) {
-        return <FullScreenLoader text="Cargando..." variant="heart" />;
+        return (
+            <>
+                <DebugInfo />
+                <FullScreenLoader text="Cargando..." variant="heart" />
+            </>
+        );
     }
     if (!user) {
         // Mostrar onboarding si no se ha completado
         if (showOnboarding) {
-            return <Onboarding onComplete={handleOnboardingComplete} />;
+            return (
+                <>
+                    <DebugInfo />
+                    <Onboarding onComplete={handleOnboardingComplete} />
+                </>
+            );
         }
 
         // Mostrar pantalla de login rediseñada
-        return <Login onSignIn={signInWithGoogle} loading={loading} />;
+        return (
+            <>
+                <DebugInfo />
+                <Login onSignIn={signInWithGoogle} loading={loading} />
+            </>
+        );
     }
 
     // Si el usuario no tiene un espacio actual, mostrar selección de espacios
     if (!userProfile?.currentSpaceId) {
-        return <SpaceSelection />;
+        return (
+            <>
+                <DebugInfo />
+                <SpaceSelection />
+            </>
+        );
     }
 
     return (
         <div className="min-h-dvh bg-gray-50 text-text pb-20">
+            <DebugInfo />
             <div className="mx-auto max-w-screen-sm min-h-[calc(100dvh-5rem)]">
                 <Outlet />
             </div>
