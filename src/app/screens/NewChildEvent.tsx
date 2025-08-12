@@ -285,7 +285,7 @@ export default function NewChildEvent() {
                     />
                 </div>
 
-                <div className="sticky bottom-0 bg-gray-50 p-4 -mx-4 border-t">
+                <div className="sticky bottom-0 bg-surface p-4 -mx-4 border-t">
                     <button
                         disabled={isSubmitting}
                         className="w-full rounded-pill bg-brand-blue text-white py-3 font-semibold active:scale-pressed transition disabled:opacity-50 disabled:cursor-not-allowed"

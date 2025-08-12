@@ -6,7 +6,5 @@ export * from './AppBar';
 export * from './LoadingSpinner';
 export * from './OptimizedImage';
 export * from './SimpleImage';
-export * from './DebugInfo';
-export * from './IOSPWAAuth';
 
 

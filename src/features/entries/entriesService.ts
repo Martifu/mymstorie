@@ -1,7 +1,6 @@
 import { addDoc, collection, doc, serverTimestamp, setDoc, updateDoc, deleteField, getDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { auth, db, storage } from '../../lib/firebase';
-import { sendNotificationToMembers } from '../notifications/notificationsService';
 
 export async function createMemory(spaceId: string, form: FormData, onProgress?: (fileName: string, progress: number) => void) {
   const title = String(form.get('title') || '');
@@ -64,25 +63,7 @@ export async function createMemory(spaceId: string, form: FormData, onProgress?:
     }
   });
 
-  const docRef = await addDoc(collection(db, `spaces/${spaceId}/entries`), entry);
-
-  // Enviar notificaciones a otros miembros del espacio
-  try {
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      await sendNotificationToMembers(
-        spaceId,
-        'memory',
-        title,
-        docRef.id,
-        currentUser.uid,
-        currentUser.displayName || 'Alguien'
-      );
-    }
-  } catch (notificationError) {
-    console.error('Error enviando notificaciones para memory:', notificationError);
-    // No fallar la creación por errores de notificación
-  }
+  await addDoc(collection(db, `spaces/${spaceId}/entries`), entry);
 }
 
 export async function createGoal(spaceId: string, form: FormData) {
@@ -140,25 +121,7 @@ export async function createGoal(spaceId: string, form: FormData) {
     }
   });
 
-  const docRef = await addDoc(collection(db, `spaces/${spaceId}/entries`), entry);
-
-  // Enviar notificaciones a otros miembros del espacio
-  try {
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      await sendNotificationToMembers(
-        spaceId,
-        'goal',
-        title,
-        docRef.id,
-        currentUser.uid,
-        currentUser.displayName || 'Alguien'
-      );
-    }
-  } catch (notificationError) {
-    console.error('Error enviando notificaciones para goal:', notificationError);
-    // No fallar la creación por errores de notificación
-  }
+  await addDoc(collection(db, `spaces/${spaceId}/entries`), entry);
 }
 
 export async function createChildEvent(spaceId: string, form: FormData, onProgress?: (fileName: string, progress: number) => void, onBirthEvent?: (name: string, gender: 'male' | 'female', birthDate: Date) => Promise<void>) {
@@ -272,26 +235,8 @@ export async function createChildEvent(spaceId: string, form: FormData, onProgre
   });
 
   console.log('Guardando entrada en Firestore:', entry);
-  const docRef = await addDoc(collection(db, `spaces/${spaceId}/entries`), entry);
+  await addDoc(collection(db, `spaces/${spaceId}/entries`), entry);
   console.log('Entrada guardada exitosamente');
-
-  // Enviar notificaciones a otros miembros del espacio
-  try {
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      await sendNotificationToMembers(
-        spaceId,
-        'child_event',
-        title || milestoneLabel,
-        docRef.id,
-        currentUser.uid,
-        currentUser.displayName || 'Alguien'
-      );
-    }
-  } catch (notificationError) {
-    console.error('Error enviando notificaciones para child_event:', notificationError);
-    // No fallar la creación por errores de notificación
-  }
 }
 
 export async function toggleFavorite(spaceId: string, entryId: string, uid: string, makeFav: boolean) {
