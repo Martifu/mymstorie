@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { initializeAuth, indexedDBLocalPersistence, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getMessaging, isSupported, getToken } from 'firebase/messaging';
@@ -14,7 +14,12 @@ const firebaseConfig = {
 };
 
 export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+
+// Configurar auth con persistencia indexedDB para PWA
+export const auth = initializeAuth(app, {
+  persistence: indexedDBLocalPersistence,
+});
+
 export const provider = new GoogleAuthProvider();
 export const db = getFirestore(app);
 export const storage = getStorage(app);

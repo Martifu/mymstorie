@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState, useRef } from 'react';
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { GoogleAuthProvider, onAuthStateChanged, signInWithRedirect, signInWithPopup, signOut, getRedirectResult } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { getUserProfile } from '../spaces/spacesService';
 import { setupMessaging } from '../../lib/firebase';
+import { isPWA, isIOS, logPWAInfo } from '../../lib/pwaUtils';
 
 type AuthContextType = {
     user: User | null;
@@ -15,6 +16,8 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
@@ -29,10 +32,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (initializingRef.current) return;
             initializingRef.current = true;
 
+            // Log información de PWA para debugging
+            logPWAInfo();
+
+            // Manejar resultado del redirect (para PWA móviles)
             try {
-                await setPersistence(auth, browserLocalPersistence);
+                const result = await getRedirectResult(auth);
+                if (result && result.user) {
+                    console.log('Usuario autenticado via redirect:', result.user.email);
+                }
             } catch (error) {
-                console.error('Error setting auth persistence:', error);
+                console.error('Error handling redirect result:', error);
             }
 
             const unsub = onAuthStateChanged(auth, async (u) => {
@@ -125,7 +135,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
+
+        // Configurar el provider para obtener información adicional
+        provider.addScope('email');
+        provider.addScope('profile');
+
+        try {
+            // Usar redirect para PWA móviles (especialmente iOS) y popup para escritorio
+            if (isPWA() || isIOS()) {
+                console.log('Usando signInWithRedirect para PWA/iOS');
+                await signInWithRedirect(auth, provider);
+                // El resultado se manejará en getRedirectResult() al recargar la página
+            } else {
+                console.log('Usando signInWithPopup para escritorio');
+                await signInWithPopup(auth, provider);
+            }
+        } catch (error) {
+            console.error('Error en autenticación:', error);
+            throw error;
+        }
     };
 
     const signOutApp = async () => {
