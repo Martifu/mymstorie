@@ -1,12 +1,12 @@
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import type { ComponentType } from 'react';
 import { useAuth } from '../../features/auth/useAuth';
 import { useSpaces } from '../../features/spaces/useSpaces';
 import { SpaceSelection } from '../screens/SpaceSelection';
 import { Onboarding } from '../screens/Onboarding';
 import { Login } from '../screens/Login';
-import { FullScreenLoader, DebugInfo } from '../../components';
+import { FullScreenLoader, DebugInfo, IOSPWAAuth } from '../../components';
 import { Home2, Image, DocumentText, Profile as ProfileIcon, People } from 'iconsax-react';
 import { FAB } from '../../components';
 import { motion } from 'framer-motion';
@@ -24,6 +24,21 @@ export function RootLayout() {
         spacesLoading,
         userProfile: userProfile ? { currentSpaceId: userProfile.currentSpaceId } : null
     });
+
+    // Detectar si viene de autenticación externa (Safari)
+    const urlParams = new URLSearchParams(location.search);
+    const authParam = urlParams.get('auth');
+    const returnParam = urlParams.get('return');
+
+    // Si viene de Safari con autenticación, intentar login automático
+    React.useEffect(() => {
+        if (authParam === 'google' && returnParam === 'pwa' && !user && !loading) {
+            console.log('Detected auth return from Safari, attempting login...');
+            signInWithGoogle().catch(console.error);
+            // Limpiar URL
+            navigate('/', { replace: true });
+        }
+    }, [authParam, returnParam, user, loading, signInWithGoogle, navigate]);
     const isCreationPage = location.pathname.includes('/new') || location.pathname.includes('/edit');
     const isDetailPage = location.pathname.includes('/memories/') && location.pathname.split('/').length > 2;
     const showFAB = !location.pathname.startsWith('/profile') && !isCreationPage && !isDetailPage;
@@ -58,7 +73,20 @@ export function RootLayout() {
             );
         }
 
-        // Mostrar pantalla de login rediseñada
+        // Detectar iOS PWA para mostrar pantalla especial de autenticación
+        const isStandalone = (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches;
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+        if (isStandalone && isIOS) {
+            return (
+                <>
+                    <DebugInfo />
+                    <IOSPWAAuth onTryAgain={signInWithGoogle} />
+                </>
+            );
+        }
+
+        // Mostrar pantalla de login rediseñada para otros casos
         return (
             <>
                 <DebugInfo />

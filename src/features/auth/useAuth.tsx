@@ -138,19 +138,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         initializeAuth();
 
-        // Manejar visibilidad de la página para iOS
+        // Manejar visibilidad de la página para iOS - mejorado para PWA
         const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible' && auth.currentUser && !user) {
-                // Si hay un usuario autenticado en Firebase pero no en el estado local, restaurar
-                console.log('Restoring user session after page visibility change');
-                setUser(auth.currentUser);
-                setLoading(false);
+            if (document.visibilityState === 'visible') {
+                console.log('App became visible, checking auth state...');
+
+                // Forzar verificación del estado de autenticación
+                if (auth.currentUser && !user) {
+                    console.log('Restoring user session after visibility change');
+                    setUser(auth.currentUser);
+                    setLoading(false);
+                } else if (!auth.currentUser && !user) {
+                    // Verificar si el usuario se autenticó en otra pestaña
+                    setTimeout(() => {
+                        if (auth.currentUser && !user) {
+                            console.log('User authenticated in another tab, updating state');
+                            setUser(auth.currentUser);
+                            setLoading(false);
+                        }
+                    }, 1000);
+                }
             }
         };
 
         const handleFocus = () => {
+            console.log('App gained focus, checking auth state...');
             if (auth.currentUser && !user) {
-                // Restaurar estado de autenticación cuando la ventana recupera el foco
                 console.log('Restoring user session after window focus');
                 setUser(auth.currentUser);
                 setLoading(false);
@@ -181,40 +194,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         console.log('Sign in method detection:', { isStandalone, isIOS });
 
-        try {
-            if (isStandalone && isIOS) {
-                // Usar redirect para PWAs en iOS
-                console.log('Using signInWithRedirect for iOS PWA');
-                await signInWithRedirect(auth, provider);
-            } else {
-                // Usar popup para navegadores normales
-                console.log('Using signInWithPopup for normal browser');
+        // Para iOS PWA, intentar popup primero y luego dar instrucciones si falla
+        if (isStandalone && isIOS) {
+            console.log('iOS PWA detected - trying popup first');
+            try {
                 await signInWithPopup(auth, provider);
+                return;
+            } catch (error: any) {
+                console.log('iOS PWA popup failed, user needs to use Safari:', error);
+                // El error se manejará en el UI con el componente IOSPWAAuth
+                throw new Error('ios-pwa-auth-required');
             }
+        }
+
+        // Para navegadores normales y no-iOS PWA
+        try {
+            console.log('Using signInWithPopup for normal browser');
+            await signInWithPopup(auth, provider);
         } catch (error: any) {
             console.error('Sign in error:', error);
 
-            // Manejo específico de errores de red en iOS PWA
+            // Si falla popup, intentar redirect como fallback
+            if (error?.code === 'auth/popup-blocked' || error?.code === 'auth/popup-closed-by-user') {
+                console.log('Popup failed, trying redirect...');
+                try {
+                    await signInWithRedirect(auth, provider);
+                } catch (redirectError) {
+                    console.error('Redirect also failed:', redirectError);
+                    alert('Error al iniciar sesión. Por favor, desbloquea los popups o intenta desde un navegador.');
+                }
+                return;
+            }
+
+            // Para otros errores de red
             if (error?.code === 'auth/network-request-failed') {
-                console.log('Network error detected, retrying with different approach...');
-
-                // Esperar un momento y reintentar
-                setTimeout(async () => {
-                    try {
-                        if (isStandalone && isIOS) {
-                            // Reintentar con redirect
-                            await signInWithRedirect(auth, provider);
-                        } else {
-                            await signInWithPopup(auth, provider);
-                        }
-                    } catch (retryError) {
-                        console.error('Retry failed:', retryError);
-                        // Mostrar mensaje de error al usuario
-                        alert('Error de conexión. Por favor, verifica tu conexión a internet e inténtalo de nuevo.');
-                    }
-                }, 2000);
-
-                return; // No lanzar el error inicial
+                alert('Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo.');
+                return;
             }
 
             throw error;
