@@ -1,4 +1,8 @@
-/* global importScripts, firebase */
+/* global importScripts, firebase, workbox */
+// Importar Workbox para funcionalidad PWA
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js');
+
+// Importar Firebase
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 
@@ -12,29 +16,57 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// Variable para trackear notificaciones y prevenir duplicados
+let lastNotificationTime = 0;
+let lastNotificationTitle = '';
+
 messaging.onBackgroundMessage((payload) => {
     console.log('Mensaje recibido en background:', payload);
     const { title, body } = payload.notification || {};
+    const currentTime = Date.now();
+
+    // Prevenir notificaciones duplicadas basadas en tiempo y título
+    if (title === lastNotificationTitle && (currentTime - lastNotificationTime) < 5000) {
+        console.log('Notificación duplicada detectada, ignorando...');
+        return Promise.resolve();
+    }
+
+    lastNotificationTime = currentTime;
+    lastNotificationTitle = title || '';
 
     // Solo mostrar notificación si la app no está visible
-    // Esto ayuda a prevenir duplicados en iOS PWA
     return self.clients.matchAll({
         type: 'window',
         includeUncontrolled: true
     }).then((clients) => {
-        const hasVisibleClient = clients.some(client => client.visibilityState === 'visible');
+        const hasVisibleClient = clients.some(client =>
+            client.visibilityState === 'visible' &&
+            client.url.includes(self.registration.scope)
+        );
+
+        console.log('Clientes visibles:', hasVisibleClient);
 
         if (!hasVisibleClient && title) {
+            // Crear ID único para la notificación
+            const notificationId = `mymstorie-${Date.now()}`;
+
             return self.registration.showNotification(title, {
                 body,
                 icon: '/logo.png',
                 badge: '/logo.png',
-                data: payload.data,
-                tag: 'mymstorie-notification', // Previene múltiples notificaciones del mismo tipo
+                data: { ...payload.data, notificationId },
+                tag: notificationId, // Usar ID único para prevenir reemplazo
                 renotify: false,
-                requireInteraction: false
+                requireInteraction: false,
+                silent: false
             });
+        } else {
+            console.log('App visible o sin título, no mostrando notificación');
+            return Promise.resolve();
         }
+    }).catch(error => {
+        console.error('Error al procesar notificación:', error);
+        return Promise.resolve();
     });
 });
 
@@ -76,3 +108,53 @@ self.addEventListener('notificationclick', (event) => {
             })
     );
 });
+
+// Configurar Workbox para funcionalidad PWA
+if (workbox) {
+    console.log('Workbox cargado correctamente');
+
+    // Configurar estrategias de caché
+    workbox.routing.registerRoute(
+        ({ request }) => request.mode === 'navigate',
+        new workbox.strategies.NetworkFirst({
+            cacheName: 'html',
+            networkTimeoutSeconds: 3,
+        })
+    );
+
+    workbox.routing.registerRoute(
+        ({ request }) => ['script', 'style'].includes(request.destination),
+        new workbox.strategies.StaleWhileRevalidate({
+            cacheName: 'assets',
+        })
+    );
+
+    workbox.routing.registerRoute(
+        ({ url }) => url.origin.includes('fonts.googleapis.com'),
+        new workbox.strategies.StaleWhileRevalidate({
+            cacheName: 'google-fonts-styles',
+        })
+    );
+
+    workbox.routing.registerRoute(
+        ({ url }) => url.origin.includes('fonts.gstatic.com'),
+        new workbox.strategies.CacheFirst({
+            cacheName: 'google-fonts-webfonts',
+        })
+    );
+
+    workbox.routing.registerRoute(
+        ({ url }) => url.origin.includes('firebasestorage.googleapis.com') || url.origin.includes('storage.googleapis.com'),
+        new workbox.strategies.CacheFirst({
+            cacheName: 'media',
+            plugins: [{
+                cacheKeyWillBeUsed: async ({ request }) => `${request.url}?timestamp=${Date.now()}`,
+            }],
+        })
+    );
+
+    // Precachear archivos estáticos
+    workbox.precaching.precacheAndRoute(self.__WB_MANIFEST || []);
+} else {
+    console.log('Workbox no se pudo cargar');
+}
