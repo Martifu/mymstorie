@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { getMessaging, isSupported, getToken } from 'firebase/messaging';
+import { getMessaging, isSupported, getToken, onMessage } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FB_API_KEY,
@@ -24,11 +24,22 @@ export async function setupMessaging(): Promise<string | undefined> {
   if (!(await isSupported())) return;
   const messaging = getMessaging(app);
   const vapidKey = import.meta.env.VITE_FB_VAPID_KEY;
+
   try {
     if (typeof Notification !== 'undefined') {
       const perm = await Notification.requestPermission();
       if (perm !== 'granted') return undefined;
     }
+
+    // Manejar notificaciones cuando la app está en foreground
+    // Esto previene notificaciones duplicadas en iOS PWA
+    onMessage(messaging, (payload) => {
+      console.log('Mensaje recibido en foreground:', payload);
+      // No mostrar notificación cuando la app está activa
+      // El usuario ya está viendo la app, no necesita notificación
+      return;
+    });
+
     const token = await getToken(messaging, { vapidKey });
     return token || undefined;
   } catch { return undefined; }

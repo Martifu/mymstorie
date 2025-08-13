@@ -19,3 +19,12 @@ if ('serviceWorker' in navigator) {
 
 // Initialize Web Push (FCM)
 setupMessaging()
+
+// Escuchar mensajes del service worker para navegación
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data?.type === 'NAVIGATE') {
+      window.location.href = event.data.url;
+    }
+  });
+}
