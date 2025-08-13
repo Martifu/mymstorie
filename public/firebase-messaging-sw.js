@@ -1,8 +1,5 @@
-/* global importScripts, firebase, workbox */
-// Importar Workbox para funcionalidad PWA
-importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js');
-
-// Importar Firebase
+/* global importScripts, firebase */
+// Importar Firebase para notificaciones
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 
@@ -109,52 +106,4 @@ self.addEventListener('notificationclick', (event) => {
     );
 });
 
-// Configurar Workbox para funcionalidad PWA
-if (workbox) {
-    console.log('Workbox cargado correctamente');
-
-    // Configurar estrategias de caché
-    workbox.routing.registerRoute(
-        ({ request }) => request.mode === 'navigate',
-        new workbox.strategies.NetworkFirst({
-            cacheName: 'html',
-            networkTimeoutSeconds: 3,
-        })
-    );
-
-    workbox.routing.registerRoute(
-        ({ request }) => ['script', 'style'].includes(request.destination),
-        new workbox.strategies.StaleWhileRevalidate({
-            cacheName: 'assets',
-        })
-    );
-
-    workbox.routing.registerRoute(
-        ({ url }) => url.origin.includes('fonts.googleapis.com'),
-        new workbox.strategies.StaleWhileRevalidate({
-            cacheName: 'google-fonts-styles',
-        })
-    );
-
-    workbox.routing.registerRoute(
-        ({ url }) => url.origin.includes('fonts.gstatic.com'),
-        new workbox.strategies.CacheFirst({
-            cacheName: 'google-fonts-webfonts',
-        })
-    );
-
-    workbox.routing.registerRoute(
-        ({ url }) => url.origin.includes('firebasestorage.googleapis.com') || url.origin.includes('storage.googleapis.com'),
-        new workbox.strategies.CacheFirst({
-            cacheName: 'media',
-            plugins: [{
-                cacheKeyWillBeUsed: async ({ request }) => `${request.url}?timestamp=${Date.now()}`,
-            }],
-        })
-    );
-
-    // Precachear archivos estáticos
-    workbox.precaching.precacheAndRoute(self.__WB_MANIFEST || []);
-} else {
-    console.log('Workbox no se pudo cargar');
-}
+console.log('Firebase Messaging Service Worker cargado correctamente');

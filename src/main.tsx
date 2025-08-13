@@ -10,32 +10,30 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 )
 
-// Limpiar service workers antiguos para prevenir duplicados
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    registrations.forEach((registration) => {
-      // Desregistrar service workers que no sean el nuestro
-      if (registration.scope !== window.location.origin + '/') {
-        console.log('Desregistrando SW antiguo:', registration.scope);
-        registration.unregister();
-      }
-    });
-  });
-}
-
-// Register PWA service worker (que incluye Firebase Messaging)
+// Register PWA service worker
 if ('serviceWorker' in navigator) {
   import('virtual:pwa-register').then(({ registerSW }) => {
     registerSW({
       immediate: true,
       onRegistered(r) {
-        console.log('Service Worker registrado:', r);
+        console.log('PWA Service Worker registrado:', r);
       },
       onRegisterError(error) {
-        console.error('Error al registrar Service Worker:', error);
+        console.error('Error al registrar PWA Service Worker:', error);
       }
     })
   })
+}
+
+// Register Firebase Messaging service worker separadamente
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+    scope: '/firebase-messaging-sw.js'
+  }).then((registration) => {
+    console.log('Firebase Messaging SW registrado:', registration);
+  }).catch((error) => {
+    console.error('Error al registrar Firebase Messaging SW:', error);
+  });
 }
 
 // Initialize Web Push (FCM)
