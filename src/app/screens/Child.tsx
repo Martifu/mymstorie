@@ -213,6 +213,7 @@ export function Child() {
                 searchPlaceholder="Buscar eventos..."
                 searchValue={searchTerm}
                 onSearchChange={setSearchTerm}
+                fixedHeader={true}
             >
                 {/* Filtros */}
                 <div className="flex gap-3">

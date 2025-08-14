@@ -38,6 +38,7 @@ export function Goals() {
                     to: "/goals/new",
                     color: "blue"
                 }}
+                fixedHeader={true}
             >
                 {/* Estadísticas y filtros */}
                 {entries.length > 0 && (

@@ -18,6 +18,7 @@ export function Memories() {
                     to: "/memories/new",
                     color: "purple"
                 }}
+                fixedHeader={true}
             />
             {entries.length > 0 ? (
                 <motion.div
