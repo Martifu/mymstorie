@@ -11,6 +11,13 @@ import { Home2, Image, DocumentText, Profile as ProfileIcon, People } from 'icon
 import { FAB } from '../../components';
 import { motion } from 'framer-motion';
 
+// Import main screens for persistent mounting
+import { Home } from '../screens/Home';
+import { Memories } from '../screens/Memories';
+import { Goals } from '../screens/Goals';
+import { Child } from '../screens/Child';
+import { Profile } from '../screens/Profile';
+
 export function RootLayout() {
     const { user, loading, signInWithEmail, signUpWithEmail, resetPassword } = useAuth();
     const { userProfile, loading: spacesLoading } = useSpaces();
@@ -18,8 +25,26 @@ export function RootLayout() {
     const navigate = useNavigate();
     const isCreationPage = location.pathname.includes('/new') || location.pathname.includes('/edit');
     const isDetailPage = location.pathname.includes('/memories/') && location.pathname.split('/').length > 2;
-    const showFAB = !location.pathname.startsWith('/profile') && !isCreationPage && !isDetailPage;
-    const showNavbar = !isCreationPage && !isDetailPage;
+    const isCompleteGoalPage = location.pathname.includes('/complete');
+    const isGoalDetailPage = location.pathname.includes('/goals/') && !location.pathname.includes('/new') && !location.pathname.includes('/complete') && location.pathname.split('/').length === 3;
+
+    // Special pages that need Outlet (non-persistent)
+    const isSpecialPage = isCreationPage || isDetailPage || isCompleteGoalPage || isGoalDetailPage;
+
+    const showFAB = !location.pathname.startsWith('/profile') && !isSpecialPage;
+    const showNavbar = !isSpecialPage;
+
+    // Determine which main screen to show
+    const getCurrentScreen = () => {
+        if (location.pathname === '/') return 'home';
+        if (location.pathname === '/memories') return 'memories';
+        if (location.pathname === '/goals') return 'goals';
+        if (location.pathname === '/child') return 'child';
+        if (location.pathname === '/profile') return 'profile';
+        return null;
+    };
+
+    const currentScreen = getCurrentScreen();
 
     // Estados para el onboarding
     const [showOnboarding, setShowOnboarding] = useState(() => {
@@ -57,7 +82,29 @@ export function RootLayout() {
     return (
         <div className="min-h-dvh bg-gray-50 text-text pb-20">
             <div className="mx-auto max-w-screen-sm">
-                <Outlet />
+                {/* Special pages use Outlet (creation, detail pages, etc.) */}
+                {isSpecialPage && <Outlet />}
+
+                {/* Main screens rendered persistently (show/hide based on route) */}
+                {!isSpecialPage && (
+                    <>
+                        <div className={currentScreen === 'home' ? 'block' : 'hidden'}>
+                            <Home />
+                        </div>
+                        <div className={currentScreen === 'memories' ? 'block' : 'hidden'}>
+                            <Memories />
+                        </div>
+                        <div className={currentScreen === 'goals' ? 'block' : 'hidden'}>
+                            <Goals />
+                        </div>
+                        <div className={currentScreen === 'child' ? 'block' : 'hidden'}>
+                            <Child />
+                        </div>
+                        <div className={currentScreen === 'profile' ? 'block' : 'hidden'}>
+                            <Profile />
+                        </div>
+                    </>
+                )}
             </div>
             {showFAB && (
                 <FAB onPick={(type) => {

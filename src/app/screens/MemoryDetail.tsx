@@ -1,8 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
-
-import { useEntries } from '../../features/entries/useEntries';
+import { useEffect, useState } from 'react';
+import { useAuth } from '../../features/auth/useAuth';
 import { ArrowLeft, Calendar } from 'iconsax-react';
-import { LoadingSpinner } from '../../components';
+import { SimpleImage, EntryOptionsMenu } from '../../components';
 
 import birthdayIcon from '../../assets/birthday-icon.svg';
 import milestoneIcon from '../../assets/milestone-icon.svg';
@@ -43,81 +43,232 @@ function getCategoryIcon(entry: Entry) {
     return <img src={milestoneIcon} alt="Hito" className="w-4 h-4 object-contain" />;
 }
 
+// Hook optimizado para cargar una entry específica
+function useSpecificEntry(spaceId: string | null, entryId: string | undefined) {
+    const [entry, setEntry] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!spaceId || !entryId) {
+            setLoading(false);
+            return;
+        }
+
+        const fetchEntry = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                const { doc, getDoc } = await import('firebase/firestore');
+                const { db } = await import('../../lib/firebase');
+
+                // Primero intentar en memories
+                const memoryRef = doc(db, `spaces/${spaceId}/entries/${entryId}`);
+                const memorySnap = await getDoc(memoryRef);
+
+                if (memorySnap.exists()) {
+                    const data = memorySnap.data();
+                    setEntry({ id: memorySnap.id, ...data });
+                    return;
+                }
+
+                setError('Entry not found');
+            } catch (err) {
+                console.error('Error fetching entry:', err);
+                setError('Error loading entry');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchEntry();
+    }, [spaceId, entryId]);
+
+    return { entry, loading, error };
+}
+
 export default function MemoryDetail() {
     const { spaceId, entryId } = useParams();
     const navigate = useNavigate();
+    const { spaceId: authSpaceId } = useAuth();
 
-    const { entries: memories } = useEntries(spaceId || null, 'memory');
-    const { entries: goals } = useEntries(spaceId || null, 'goal');
-    const { entries: childEvents } = useEntries(spaceId || null, 'child_event');
+    // Usar el spaceId de la URL o el del auth como fallback
+    const currentSpaceId = spaceId || authSpaceId;
 
-    // Buscar el entry en todas las colecciones
-    const entry = [...memories, ...goals, ...childEvents].find(e => e.id === entryId);
+    const { entry, loading, error } = useSpecificEntry(currentSpaceId, entryId);
 
-    if (!entry) return (
-        <div className=" bg-gray-50 flex items-center justify-center">
-            <LoadingSpinner text="Cargando detalles..." variant="pulse" size="lg" />
-        </div>
-    );
+    // Skeleton loading optimizado
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <div className="relative">
+                    <div className="aspect-[3/4] bg-gray-200 overflow-hidden rounded-2xl m-3 animate-pulse">
+                        <div className="absolute top-5 left-6 w-16 h-8 bg-white/80 rounded-full" />
+                    </div>
+                </div>
+                <div className="px-4 pb-2 space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="h-8 bg-gray-200 rounded-lg flex-1 animate-pulse" />
+                        <div className="w-20 h-6 bg-gray-200 rounded-pill animate-pulse" />
+                    </div>
+                    <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                        <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !entry) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+                <div className="text-6xl mb-4">😕</div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">No encontrado</h2>
+                <p className="text-gray-600 mb-6 text-center">
+                    No pudimos encontrar este contenido. Puede que haya sido eliminado.
+                </p>
+                <button
+                    onClick={() => navigate(-1)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-brand-purple text-white rounded-xl hover:bg-brand-purple/90 transition"
+                >
+                    <ArrowLeft size={18} />
+                    Volver
+                </button>
+            </div>
+        );
+    }
     const cover = entry.media?.[0];
     const category = getEntryCategory(entry);
     const categoryIcon = getCategoryIcon(entry);
 
     return (
         <div className="min-h-screen bg-gray-50 text-text">
-            <div className="relative">
-                <div className="aspect-[4/5] bg-surface-muted overflow-hidden rounded-2xl m-3">
-                    {cover?.type === 'image' ? (
-                        <img src={cover.url} alt={entry.title} className="h-full w-full object-cover" />
-                    ) : cover?.type === 'video' ? (
-                        <video src={cover.url} controls className="h-full w-full object-cover" />
-                    ) : null}
+            {/* Header compacto */}
+            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+                <div className="flex items-center gap-3 px-4 py-3">
                     <button
                         onClick={() => navigate(-1)}
-                        className="absolute top-5 left-6 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-sm text-text shadow-soft"
+                        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition"
                     >
-                        <ArrowLeft size={18} color="#3B3923" /> Atrás
+                        <ArrowLeft size={20} color="#3B3923" />
                     </button>
+                    <div className="flex-1 min-w-0">
+                        <h1 className="font-semibold text-gray-900 truncate">{entry.title}</h1>
+                        <div className="flex items-center gap-2 mt-1">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pill text-xs font-medium ${category.bg} ${category.color}`}>
+                                {categoryIcon}
+                                {category.label}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Menú de opciones */}
+                    <EntryOptionsMenu
+                        entryId={entryId!}
+                        entryType={entry.type}
+                        entryTitle={entry.title}
+                        spaceId={currentSpaceId!}
+                        media={entry.media}
+                        onDeleted={() => navigate(-1)}
+                    />
                 </div>
             </div>
-            <div className="px-4 pb-2">
-                <div className="flex items-start justify-between gap-3">
-                    <h1 className="text-2xl font-bold">{entry.title}</h1>
-                    <div className="flex flex-col gap-1">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pill text-xs font-medium ${category.bg} ${category.color}`}>
-                            {categoryIcon}
-                            {category.label}
-                        </span>
-                    </div>
-                </div>
-                {entry.description && (
-                    <div className="mt-3 flex items-start gap-2 text-base leading-relaxed">
-                        <p>{entry.description}</p>
-                    </div>
-                )}
-                {entry.date && (
-                    <div className="flex items-center gap-1 text-text-muted text-sm mt-3">
-                        <Calendar size={18} color="#736F4E" />
-                        <span>{new Date((entry.date as any)?.toDate?.() ?? entry.date).toLocaleDateString()}</span>
-                    </div>
-                )}
-            </div>
-            {entry.media && entry.media.length > 1 && (
-                <div className="p-4">
-                    <h2 className="text-lg font-semibold mb-2">Más fotos</h2>
-                    <div className="grid grid-cols-2 gap-2">
-                        {entry.media.slice(1).map((m, idx) => (
-                            <div key={idx} className="aspect-square overflow-hidden rounded-lg bg-surface-muted">
-                                {m.type === 'image' ? (
-                                    <img src={m.url} className="h-full w-full object-cover" />
-                                ) : (
-                                    <video src={m.url} controls className="h-full w-full object-cover" />
-                                )}
-                            </div>
-                        ))}
+
+            {/* Imagen principal optimizada */}
+            {cover && (
+                <div className="relative mx-3 mt-4 mb-6">
+                    <div className="aspect-[3/4] bg-gray-100 overflow-hidden rounded-2xl">
+                        {cover.type === 'image' ? (
+                            <SimpleImage
+                                src={cover.url}
+                                alt={entry.title}
+                                className="h-full w-full object-cover"
+                                priority={true}
+                                blur={true}
+                                fallback={
+                                    <div className="h-full w-full flex items-center justify-center bg-gray-200">
+                                        <div className="text-gray-400 text-center">
+                                            <div className="text-4xl mb-2">🖼️</div>
+                                            <div className="text-sm">Imagen no disponible</div>
+                                        </div>
+                                    </div>
+                                }
+                            />
+                        ) : cover.type === 'video' ? (
+                            <video
+                                src={cover.url}
+                                controls
+                                className="h-full w-full object-cover"
+                                poster={cover.url} // Use the same URL as poster, Firebase might provide thumbnail
+                                preload="metadata"
+                            />
+                        ) : null}
                     </div>
                 </div>
             )}
+            {/* Contenido principal */}
+            <div className="px-4 pb-6">
+                {/* Descripción */}
+                {entry.description && (
+                    <div className="bg-white rounded-2xl p-4 mb-4 border shadow-sm">
+                        <p className="text-gray-700 leading-relaxed">{entry.description}</p>
+                    </div>
+                )}
+
+                {/* Fecha */}
+                {entry.date && (
+                    <div className="bg-white rounded-2xl p-4 mb-4 border shadow-sm">
+                        <div className="flex items-center gap-2 text-gray-600">
+                            <Calendar size={18} color="#666" />
+                            <span className="text-sm font-medium">
+                                {new Date((entry.date as any)?.toDate?.() ?? entry.date).toLocaleDateString('es-ES', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                })}
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Imágenes adicionales optimizadas */}
+                {entry.media && entry.media.length > 1 && (
+                    <div className="bg-white rounded-2xl p-4 border shadow-sm">
+                        <h3 className="text-lg font-semibold mb-4 text-gray-900">
+                            Más contenido ({entry.media.length - 1})
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                            {entry.media.slice(1).map((m: any, idx: number) => (
+                                <div key={idx} className="aspect-square overflow-hidden rounded-xl bg-gray-100">
+                                    {m.type === 'image' ? (
+                                        <SimpleImage
+                                            src={m.url}
+                                            alt={`${entry.title} - imagen ${idx + 2}`}
+                                            className="h-full w-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                                            blur={true}
+                                            fallback={
+                                                <div className="h-full w-full flex items-center justify-center bg-gray-200">
+                                                    <div className="text-gray-400 text-2xl">🖼️</div>
+                                                </div>
+                                            }
+                                        />
+                                    ) : (
+                                        <video
+                                            src={m.url}
+                                            controls
+                                            className="h-full w-full object-cover"
+                                            preload="metadata"
+                                        />
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
 
 
         </div>

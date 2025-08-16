@@ -3,7 +3,7 @@ import { useEntries } from '../../features/entries/useEntries';
 import { useSpaces } from '../../features/spaces/useSpaces';
 import { useMemo, useRef, useState } from 'react';
 import { Camera, Target, Baby, CheckCircle, Clock, PencilSimple, Plus, Copy, Share, X, Users, Crown } from 'phosphor-react';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import { SimpleImage } from '../../components';
 
 export function Profile() {
@@ -146,12 +146,7 @@ export function Profile() {
             <h2 className="text-xl font-semibold mb-6">Perfil</h2>
 
             {/* Información del usuario */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="mb-6 rounded-2xl border bg-white p-6 shadow-soft"
-            >
+            <div className="mb-6 rounded-2xl border bg-white p-6 shadow-soft">
                 {/* Foto de perfil */}
                 <div className="flex items-center gap-4 mb-4">
                     <div className="relative">
@@ -160,6 +155,7 @@ export function Profile() {
                                 src={currentPhotoURL || ''}
                                 alt="Foto de perfil"
                                 className="w-full h-full object-cover"
+                                priority={true}
                                 fallback={
                                     <span className="text-white font-bold text-xl">
                                         {getInitials(user?.displayName || user?.email?.split('@')[0] || 'U')}
@@ -213,25 +209,15 @@ export function Profile() {
                 <button onClick={signOutApp} className="w-full rounded-pill bg-brand-blue text-white py-3 font-semibold active:scale-pressed transition">
                     Cerrar sesión
                 </button>
-            </motion.div>
+            </div>
 
             {/* Estadísticas */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="mb-6"
-            >
+            <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Resumen de actividad</h3>
 
                 <div className="grid grid-cols-1 gap-4">
                     {/* Recuerdos */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.4, delay: 0.2 }}
-                        className="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
-                    >
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-full bg-brand-purple/10 flex items-center justify-center">
                                 <Camera size={24} className="text-brand-purple" weight="bold" />
@@ -245,15 +231,10 @@ export function Profile() {
                                 <p className="text-xs text-gray-500">total</p>
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
 
                     {/* Objetivos */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.4, delay: 0.3 }}
-                        className="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
-                    >
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-full bg-brand-blue/10 flex items-center justify-center">
                                 <Target size={24} className="text-brand-blue" weight="bold" />
@@ -281,15 +262,10 @@ export function Profile() {
                                 </div>
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
 
                     {/* Eventos del hijo */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.4, delay: 0.4 }}
-                        className="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
-                    >
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-full bg-brand-gold/10 flex items-center justify-center">
                                 <Baby size={24} className="text-brand-gold" weight="bold" />
@@ -303,18 +279,13 @@ export function Profile() {
                                 <p className="text-xs text-gray-500">eventos</p>
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
-            </motion.div>
+            </div>
 
             {/* Miembros de la familia */}
             {currentSpace && spaceMembers.length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                    className="mb-6"
-                >
+                <div className="mb-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Miembros de la familia</h3>
 
                     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -329,12 +300,9 @@ export function Profile() {
                         </div>
 
                         <div className="space-y-3">
-                            {spaceMembers.map((member, index) => (
-                                <motion.div
+                            {spaceMembers.map((member) => (
+                                <div
                                     key={member.uid}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.3, delay: 0.1 * index }}
                                     className={`flex items-center gap-3 p-3 rounded-lg border ${member.isCurrentUser ? 'bg-brand-purple/5 border-brand-purple/20' : 'bg-gray-50 border-gray-200'
                                         }`}
                                 >
@@ -345,6 +313,7 @@ export function Profile() {
                                                 src={member.photoURL || ''}
                                                 alt={`Foto de ${member.displayName}`}
                                                 className="w-full h-full object-cover"
+                                                blur={true}
                                                 fallback={
                                                     <span className="text-white font-bold text-sm">
                                                         {getInitials(member.displayName || member.memberEmail?.split('@')[0] || 'U')}
@@ -387,21 +356,16 @@ export function Profile() {
                                             </div>
                                         )}
                                     </div>
-                                </motion.div>
+                                </div>
                             ))}
                         </div>
                     </div>
-                </motion.div>
+                </div>
             )}
 
             {/* Compartir espacio */}
             {currentSpace && spaceCode && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="mb-6"
-                >
+                <div className="mb-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Invitar familia</h3>
 
                     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -446,78 +410,70 @@ export function Profile() {
                             </button>
                         </div>
                     </div>
-                </motion.div>
+                </div>
             )}
 
             {/* Modal para editar nombre del espacio */}
-            <AnimatePresence>
-                {showEditSpaceName && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={() => setShowEditSpaceName(false)}
+            {showEditSpaceName && (
+                <div
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    onClick={() => setShowEditSpaceName(false)}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl"
                     >
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl"
-                        >
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-bold text-gray-900">Cambiar nombre del espacio</h3>
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-gray-900">Cambiar nombre del espacio</h3>
+                            <button
+                                onClick={() => setShowEditSpaceName(false)}
+                                className="p-2 rounded-full hover:bg-gray-100 transition"
+                            >
+                                <X size={20} className="text-gray-500" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Nuevo nombre del espacio
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newSpaceName}
+                                    onChange={(e) => setNewSpaceName(e.target.value)}
+                                    placeholder="ej. Familia García"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple transition"
+                                    maxLength={50}
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
                                 <button
                                     onClick={() => setShowEditSpaceName(false)}
-                                    className="p-2 rounded-full hover:bg-gray-100 transition"
+                                    className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium"
                                 >
-                                    <X size={20} className="text-gray-500" />
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleUpdateSpaceName}
+                                    disabled={!newSpaceName.trim() || isUpdatingSpaceName || newSpaceName.trim() === currentSpace?.name}
+                                    className="flex-1 px-4 py-3 bg-brand-purple text-white rounded-xl hover:bg-brand-purple/90 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {isUpdatingSpaceName ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Guardando...
+                                        </>
+                                    ) : (
+                                        'Guardar cambios'
+                                    )}
                                 </button>
                             </div>
-
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Nuevo nombre del espacio
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newSpaceName}
-                                        onChange={(e) => setNewSpaceName(e.target.value)}
-                                        placeholder="ej. Familia García"
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple transition"
-                                        maxLength={50}
-                                    />
-                                </div>
-
-                                <div className="flex gap-3 pt-2">
-                                    <button
-                                        onClick={() => setShowEditSpaceName(false)}
-                                        className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        onClick={handleUpdateSpaceName}
-                                        disabled={!newSpaceName.trim() || isUpdatingSpaceName || newSpaceName.trim() === currentSpace?.name}
-                                        className="flex-1 px-4 py-3 bg-brand-purple text-white rounded-xl hover:bg-brand-purple/90 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                    >
-                                        {isUpdatingSpaceName ? (
-                                            <>
-                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                Guardando...
-                                            </>
-                                        ) : (
-                                            'Guardar cambios'
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
