@@ -2,7 +2,7 @@ import { useAuth } from '../../features/auth/useAuth';
 import { useEntries } from '../../features/entries/useEntries';
 import { useSpaces } from '../../features/spaces/useSpaces';
 import { useMemo, useRef, useState } from 'react';
-import { Camera, Target, Baby, CheckCircle, Clock, PencilSimple, Plus, Copy, Share, X } from 'phosphor-react';
+import { Camera, Target, Baby, CheckCircle, Clock, PencilSimple, Plus, Copy, Share, X, Users, Crown } from 'phosphor-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SimpleImage } from '../../components';
 
@@ -103,6 +103,20 @@ export function Profile() {
     const isSpaceOwner = useMemo(() => {
         return currentSpace && user && currentSpace.createdBy === user.uid;
     }, [currentSpace, user]);
+
+    // Obtener lista de miembros del espacio
+    const spaceMembers = useMemo(() => {
+        if (!currentSpace) return [];
+
+        return Object.entries(currentSpace.members || {}).map(([uid, memberData]: [string, any]) => ({
+            uid,
+            ...memberData,
+            isOwner: currentSpace.createdBy === uid,
+            isCurrentUser: user?.uid === uid,
+            // Para el email, mostrar solo el del usuario actual por privacidad
+            memberEmail: uid === user?.uid ? user?.email : null
+        }));
+    }, [currentSpace, user?.uid, user?.email]);
 
     // Abrir modal para editar nombre del espacio
     const handleEditSpaceName = () => {
@@ -292,6 +306,93 @@ export function Profile() {
                     </motion.div>
                 </div>
             </motion.div>
+
+            {/* Miembros de la familia */}
+            {currentSpace && spaceMembers.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                    className="mb-6"
+                >
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Miembros de la familia</h3>
+
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-brand-purple/10 flex items-center justify-center">
+                                <Users size={20} className="text-brand-purple" weight="bold" />
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="font-semibold text-gray-900">Familia conectada</h4>
+                                <p className="text-sm text-gray-600">{spaceMembers.length} miembro{spaceMembers.length !== 1 ? 's' : ''}</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            {spaceMembers.map((member, index) => (
+                                <motion.div
+                                    key={member.uid}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.3, delay: 0.1 * index }}
+                                    className={`flex items-center gap-3 p-3 rounded-lg border ${member.isCurrentUser ? 'bg-brand-purple/5 border-brand-purple/20' : 'bg-gray-50 border-gray-200'
+                                        }`}
+                                >
+                                    {/* Avatar - Container con padding extra para la corona */}
+                                    <div className="relative p-1">
+                                        <div className="w-12 h-12 rounded-full bg-brand-purple flex items-center justify-center overflow-hidden">
+                                            <SimpleImage
+                                                src={member.photoURL || ''}
+                                                alt={`Foto de ${member.displayName}`}
+                                                className="w-full h-full object-cover"
+                                                fallback={
+                                                    <span className="text-white font-bold text-sm">
+                                                        {getInitials(member.displayName || member.memberEmail?.split('@')[0] || 'U')}
+                                                    </span>
+                                                }
+                                            />
+                                        </div>
+                                        {member.isOwner && (
+                                            <div className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center border border-white shadow-sm">
+                                                <Crown size={12} className="text-yellow-700" weight="fill" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Info del miembro */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-semibold text-gray-900 truncate">
+                                                {member.displayName || 'Usuario'}
+                                                {member.isCurrentUser && (
+                                                    <span className="text-sm text-brand-purple font-normal ml-1">(Tú)</span>
+                                                )}
+                                            </p>
+                                            {member.isOwner && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                                                    <Crown size={10} weight="fill" />
+                                                    Creador
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-sm text-gray-500 truncate">{member.memberEmail || 'Email privado'}</p>
+                                        {member.role && (
+                                            <div className="mt-1">
+                                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${member.role === 'mama'
+                                                    ? 'bg-pink-100 text-pink-700'
+                                                    : 'bg-blue-100 text-blue-700'
+                                                    }`}>
+                                                    {member.role === 'mama' ? '👩 Mamá' : '👨 Papá'}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                </motion.div>
+            )}
 
             {/* Compartir espacio */}
             {currentSpace && spaceCode && (

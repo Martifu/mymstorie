@@ -189,6 +189,53 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
             ...updates
         });
     }
+
+    // Si se actualiza el displayName, también actualizar en todos los espacios
+    if (updates.displayName) {
+        await updateMemberInfoInSpaces(userId, { displayName: updates.displayName });
+    }
+}
+
+// Actualizar información del miembro en todos sus espacios
+export async function updateMemberInfoInSpaces(userId: string, memberUpdates: { displayName?: string; photoURL?: string }): Promise<void> {
+    try {
+        const userProfile = await getUserProfile(userId);
+        if (!userProfile?.spaces) {
+            return;
+        }
+
+        // Actualizar en paralelo todos los espacios del usuario
+        const updatePromises = userProfile.spaces.map(async (spaceId) => {
+            try {
+                const spaceRef = doc(db, 'spaces', spaceId);
+                const spaceDoc = await getDoc(spaceRef);
+
+                if (spaceDoc.exists()) {
+                    const spaceData = spaceDoc.data() as SpaceData;
+                    const currentMemberData = spaceData.members[userId];
+
+                    if (currentMemberData) {
+                        // Actualizar solo los campos proporcionados
+                        const updatedMemberData = {
+                            ...currentMemberData,
+                            ...memberUpdates
+                        };
+
+                        await updateDoc(spaceRef, {
+                            [`members.${userId}`]: updatedMemberData
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error(`Error updating member info in space ${spaceId}:`, error);
+                // No lanzamos el error para que no afecte a otros espacios
+            }
+        });
+
+        await Promise.all(updatePromises);
+    } catch (error) {
+        console.error('Error updating member info in spaces:', error);
+    }
 }
 
 // Subir foto de perfil
@@ -206,6 +253,9 @@ export async function uploadProfilePhoto(userId: string, file: File): Promise<st
 
     // Actualizar el perfil del usuario con la nueva foto
     await updateUserProfile(userId, { photoURL: downloadURL });
+
+    // Actualizar la foto en todos los espacios donde es miembro
+    await updateMemberInfoInSpaces(userId, { photoURL: downloadURL });
 
     return downloadURL;
 }

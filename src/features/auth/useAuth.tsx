@@ -53,7 +53,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             spaceIds: [],
                         });
                     } else {
-                        await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
+                        // Verificar si la información de Firebase Auth ha cambiado
+                        const existingData = snap.data();
+                        const updates: any = { lastLoginAt: serverTimestamp() };
+
+                        // Detectar cambios en displayName o photoURL desde Firebase Auth
+                        if (u.displayName && u.displayName !== existingData.displayName) {
+                            updates.displayName = u.displayName;
+                        }
+                        if (u.photoURL && u.photoURL !== existingData.photoURL) {
+                            updates.photoURL = u.photoURL;
+                        }
+
+                        await updateDoc(userRef, updates);
+
+                        // Si hay cambios en displayName o photoURL, actualizar en espacios
+                        // Importar dinámicamente para evitar dependencia circular
+                        if (updates.displayName || updates.photoURL) {
+                            try {
+                                const { updateMemberInfoInSpaces } = await import('../spaces/spacesService');
+                                const memberUpdates: { displayName?: string; photoURL?: string } = {};
+                                if (updates.displayName) memberUpdates.displayName = updates.displayName;
+                                if (updates.photoURL) memberUpdates.photoURL = updates.photoURL;
+                                await updateMemberInfoInSpaces(u.uid, memberUpdates);
+                            } catch (error) {
+                                console.error('Error updating member info in spaces:', error);
+                            }
+                        }
                     }
 
                     // Obtener el perfil del usuario y su espacio actual
