@@ -1,13 +1,15 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../features/auth/useAuth';
 import { useEntries } from '../../features/entries/useEntries';
-import { EntryCard, AppBar } from '../../components';
+import { EntryCard, AppBar, EntryDetailModal } from '../../components';
 import { Camera, Plus } from 'phosphor-react';
 
 
 export function Memories() {
     const { spaceId } = useAuth();
     const { entries } = useEntries(spaceId, 'memory');
+    const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
     return (
         <div className="bg-gray-50 p-4">
             <AppBar
@@ -23,7 +25,7 @@ export function Memories() {
                         <div key={e.id}>
                             <EntryCard
                                 entry={{ id: e.id, type: e.type, title: e.title, description: e.description, date: String((e as any).date?.toDate?.() ?? e.date), media: e.media }}
-                                onClick={() => window.location.href = `/memories/${spaceId}/${e.id}`}
+                                onClick={() => setSelectedEntryId(e.id)}
                             />
                         </div>
                     ))}
@@ -50,6 +52,17 @@ export function Memories() {
                     </div>
                 </div>
             )}
+
+            {/* Modal de detalle de entry */}
+            <EntryDetailModal
+                entryId={selectedEntryId}
+                spaceId={spaceId || undefined}
+                onClose={() => setSelectedEntryId(null)}
+                onDeleted={() => {
+                    setSelectedEntryId(null);
+                    // El hook useEntries se refresca automáticamente
+                }}
+            />
         </div>
     );
 }

@@ -1,13 +1,15 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../features/auth/useAuth';
 import { useEntries } from '../../features/entries/useEntries';
-import { AppBar } from '../../components';
+import { AppBar, EntryDetailModal } from '../../components';
 import { FlagBanner, Plus, CheckCircle, Clock } from 'phosphor-react';
 
 
 export function Goals() {
     const { spaceId } = useAuth();
     const { entries } = useEntries(spaceId, 'goal');
+    const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 
     return (
         <div className="bg-gray-50 p-4">
@@ -27,8 +29,9 @@ export function Goals() {
                                 goal={goal}
                                 onClick={() => {
                                     if ((goal as any).status === 'completed') {
-                                        window.location.href = `/goals/${goal.id}`;
+                                        setSelectedEntryId(goal.id);
                                     } else {
+                                        // Para objetivos pendientes, mantener la navegación al completar
                                         window.location.href = `/goals/${goal.id}/complete`;
                                     }
                                 }}
@@ -58,6 +61,17 @@ export function Goals() {
                     </div>
                 </div>
             )}
+
+            {/* Modal de detalle de entry */}
+            <EntryDetailModal
+                entryId={selectedEntryId}
+                spaceId={spaceId || undefined}
+                onClose={() => setSelectedEntryId(null)}
+                onDeleted={() => {
+                    setSelectedEntryId(null);
+                    // El hook useEntries se refresca automáticamente
+                }}
+            />
         </div>
     );
 }

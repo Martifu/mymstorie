@@ -7,7 +7,7 @@ import { Camera, Baby, Target, Heart, Plus, Bell } from 'phosphor-react';
 
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { SimpleImage } from '../../components';
+import { SimpleImage, EntryDetailModal } from '../../components';
 
 export function Home() {
     const { spaceId, user } = useAuth();
@@ -16,6 +16,7 @@ export function Home() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showEventSelector, setShowEventSelector] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 
     // Detectar scroll para hacer el header fixed
     useEffect(() => {
@@ -228,7 +229,7 @@ export function Home() {
                                     avatar="📸"
                                     hasMedia={hasMedia}
                                     mediaUrl={mediaUrl}
-                                    onClick={() => navigate(`/memories/${spaceId}/${memory.id}`)}
+                                    onClick={() => setSelectedEntryId(memory.id)}
                                 />
                             );
                         })}
@@ -242,7 +243,7 @@ export function Home() {
                                 subtitle={event.description || "Nuevo hito registrado"}
                                 time={format((event as any).date?.toDate?.() || new Date(event.date), "d 'de' MMM", { locale: es })}
                                 avatar="👶"
-                                onClick={() => navigate('/child')}
+                                onClick={() => setSelectedEntryId(event.id)}
                             />
                         ))}
 
@@ -357,6 +358,17 @@ export function Home() {
             </div>
             {/* Espaciador para el header fixed */}
             <div className="h-32" />
+
+            {/* Modal de detalle de entry */}
+            <EntryDetailModal
+                entryId={selectedEntryId}
+                spaceId={spaceId || undefined}
+                onClose={() => setSelectedEntryId(null)}
+                onDeleted={() => {
+                    setSelectedEntryId(null);
+                    // Opcional: refresh data si es necesario
+                }}
+            />
         </>
     );
 }

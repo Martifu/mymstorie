@@ -13,7 +13,7 @@ import { VerticalTimeline, VerticalTimelineElement } from 'react-vertical-timeli
 import 'react-vertical-timeline-component/style.min.css';
 
 import { useNavigate } from 'react-router-dom';
-import { AppBar } from '../../components';
+import { AppBar, EntryDetailModal } from '../../components';
 
 type Category = 'memory' | 'birthday' | 'milestone' | 'birth';
 
@@ -75,6 +75,7 @@ export function Child() {
     const navigate = useNavigate();
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     const [showEditDialog, setShowEditDialog] = useState(false);
+    const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 
     // Usar sólo la colección de Hitos del hijo
     const { entries } = useEntries(spaceId, 'child_event');
@@ -249,7 +250,7 @@ export function Child() {
                                         <div key={e.id}>
                                             <TimelineItem
                                                 entry={e}
-                                                onClick={() => window.location.href = `/memories/${spaceId}/${e.id}`}
+                                                onClick={() => setSelectedEntryId(e.id)}
                                             />
                                         </div>
                                     ))}
@@ -361,6 +362,17 @@ export function Child() {
                     </div>
                 </div>
             )}
+
+            {/* Modal de detalle de entry */}
+            <EntryDetailModal
+                entryId={selectedEntryId}
+                spaceId={spaceId || undefined}
+                onClose={() => setSelectedEntryId(null)}
+                onDeleted={() => {
+                    setSelectedEntryId(null);
+                    // El hook useEntries se refresca automáticamente
+                }}
+            />
         </div>
     );
 }
