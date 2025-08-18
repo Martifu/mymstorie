@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { DotsThreeVertical, PencilSimple, Trash } from 'phosphor-react';
+import { DotsThreeVertical, PencilSimple, Trash, MusicNote } from 'phosphor-react';
 import { useNavigate } from 'react-router-dom';
+import { AddMusicModal } from './AddMusicModal';
 
 interface EntryOptionsMenuProps {
     entryId: string;
@@ -9,7 +10,9 @@ interface EntryOptionsMenuProps {
     entryTitle: string;
     spaceId: string;
     media?: Array<{ url: string; type: 'image' | 'video' }>;
+    hasSpotify?: boolean;
     onDeleted?: () => void;
+    onUpdated?: () => void;
 }
 
 export function EntryOptionsMenu({
@@ -18,10 +21,13 @@ export function EntryOptionsMenu({
     entryTitle,
     spaceId,
     media = [],
-    onDeleted
+    hasSpotify = false,
+    onDeleted,
+    onUpdated
 }: EntryOptionsMenuProps) {
     const [showMenu, setShowMenu] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [showAddMusicModal, setShowAddMusicModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
@@ -92,6 +98,16 @@ export function EntryOptionsMenu({
                 navigate(`/child/${entryId}/edit`);
                 break;
         }
+    };
+
+    const handleAddMusic = () => {
+        setShowMenu(false);
+        setShowAddMusicModal(true);
+    };
+
+    const handleMusicAdded = () => {
+        setShowAddMusicModal(false);
+        onUpdated?.(); // Notificar que se ha actualizado para refrescar la vista
     };
 
     const deleteMediaFiles = async (mediaUrls: Array<{ url: string }>) => {
@@ -191,6 +207,17 @@ export function EntryOptionsMenu({
                                 <PencilSimple size={18} className="text-blue-500" weight="bold" />
                                 <span className="font-medium">Editar</span>
                             </button>
+
+                            {/* Opción de agregar música solo para recuerdos sin música */}
+                            {entryType === 'memory' && !hasSpotify && (
+                                <button
+                                    onClick={handleAddMusic}
+                                    className="w-full px-4 py-3 text-left hover:bg-green-50 flex items-center gap-3 text-green-600 transition-colors"
+                                >
+                                    <MusicNote size={18} className="text-green-500" weight="fill" />
+                                    <span className="font-medium">Agregar canción</span>
+                                </button>
+                            )}
 
                             <div className="border-t border-gray-100 my-1" />
 
@@ -292,6 +319,16 @@ export function EntryOptionsMenu({
                 </div>,
                 document.body
             )}
+
+            {/* Modal para agregar música */}
+            <AddMusicModal
+                isOpen={showAddMusicModal}
+                onClose={() => setShowAddMusicModal(false)}
+                entryId={entryId}
+                entryTitle={entryTitle}
+                spaceId={spaceId}
+                onMusicAdded={handleMusicAdded}
+            />
         </>
     );
 }

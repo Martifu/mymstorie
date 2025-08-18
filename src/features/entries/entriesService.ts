@@ -340,3 +340,23 @@ export async function updateGoalStatus(
 
   await updateDoc(refDoc, updateData);
 }
+
+// Actualizar entrada existente con datos de Spotify
+export async function addSpotifyToEntry(
+  spaceId: string,
+  entryId: string,
+  spotifyData: EntrySpotifyData
+): Promise<void> {
+  const refDoc = doc(db, `spaces/${spaceId}/entries/${entryId}`);
+
+  // Verificar que el documento existe
+  const docSnap = await getDoc(refDoc);
+  if (!docSnap.exists()) {
+    throw new Error('La entrada no existe');
+  }
+
+  await updateDoc(refDoc, {
+    spotify: spotifyData,
+    updatedAt: serverTimestamp()
+  });
+}

@@ -25,6 +25,7 @@ export interface SpotifySearchResult {
 // Configuración de Spotify (estas credenciales deben estar en variables de entorno)
 const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET;
+const CUSTOM_API_URL = import.meta.env.VITE_CUSTOM_SPOTIFY_API_URL || 'https://2a59a03c7ed8.ngrok-free.app';
 
 class SpotifyService {
     private accessToken: string | null = null;
@@ -173,18 +174,29 @@ class SpotifyService {
 
     // Obtener preview de la API personalizada usando endpoint más preciso
     private async getPreviewFromCustomApi(trackName: string, artistName?: string): Promise<string | null> {
+        // Solo usar API personalizada si está configurada (desarrollo/staging)
+        if (!CUSTOM_API_URL) {
+            console.log('🚫 API personalizada no configurada, saltando...');
+            return null;
+        }
+
         try {
             const encodedSong = encodeURIComponent(trackName);
             const encodedArtist = encodeURIComponent(artistName || '');
 
             // Usar endpoint más preciso con canción y artista separados
             const endpoint = artistName
-                ? `http://40.233.3.148:3000/api/spotify/search-with-artist?song=${encodedSong}&artist=${encodedArtist}`
-                : `http://40.233.3.148:3000/api/spotify/search?q=${encodedSong}`;
+                ? `${CUSTOM_API_URL}/api/spotify/search-with-artist?song=${encodedSong}&artist=${encodedArtist}`
+                : `${CUSTOM_API_URL}/api/spotify/search?q=${encodedSong}`;
 
             console.log(`🔍 Llamando API personalizada: ${endpoint}`);
 
-            const response = await fetch(endpoint);
+            const response = await fetch(endpoint, {
+                headers: {
+                    'ngrok-skip-browser-warning': 'true',
+                    'User-Agent': 'MyMStorie-App'
+                }
+            });
 
             if (!response.ok) {
                 console.warn(`API personalizada respondió con status ${response.status}`);

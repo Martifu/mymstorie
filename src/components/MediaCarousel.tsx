@@ -128,7 +128,9 @@ export function MediaCarousel({ media, title, className = '' }: MediaCarouselPro
                                     controls
                                     className="h-full w-full object-cover"
                                     preload="metadata"
-                                    poster={item.url}
+                                    onError={(e) => {
+                                        console.error('Error loading video:', item.url, e);
+                                    }}
                                 />
                             )}
                         </div>

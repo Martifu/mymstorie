@@ -143,6 +143,7 @@ export default function GoalDetail() {
                         entryTitle={currentGoal.title}
                         spaceId={spaceId!}
                         media={media}
+                        hasSpotify={false} // Los objetivos no tienen música
                         onDeleted={() => navigate('/goals')}
                     />
                 </div>
@@ -209,8 +210,10 @@ export default function GoalDetail() {
                                             src={item.url}
                                             controls
                                             className="w-full h-full object-cover"
-                                            poster={item.thumbnail}
                                             preload="metadata"
+                                            onError={(e) => {
+                                                console.error('Error loading video:', item.url, e);
+                                            }}
                                         />
                                     ) : (
                                         <SimpleImage

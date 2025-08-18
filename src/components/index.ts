@@ -11,5 +11,7 @@ export * from './OptimizedImage';
 export * from './SimpleImage';
 export * from './MediaCarousel';
 export * from './ImageViewer';
+export * from './AddMusicModal';
+export * from './SpotifyPlayer';
 
 

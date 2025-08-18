@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../features/auth/useAuth';
 import { ArrowLeft, Calendar } from 'iconsax-react';
-import { SimpleImage, EntryOptionsMenu } from '../../components';
+import { SimpleImage, EntryOptionsMenu, SpotifyPlayer } from '../../components';
 
 import birthdayIcon from '../../assets/birthday-icon.svg';
 import milestoneIcon from '../../assets/milestone-icon.svg';
@@ -49,43 +49,48 @@ function useSpecificEntry(spaceId: string | null, entryId: string | undefined) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
+    const fetchEntry = async () => {
         if (!spaceId || !entryId) {
             setLoading(false);
             return;
         }
 
-        const fetchEntry = async () => {
-            try {
-                setLoading(true);
-                setError(null);
+        try {
+            setLoading(true);
+            setError(null);
 
-                const { doc, getDoc } = await import('firebase/firestore');
-                const { db } = await import('../../lib/firebase');
+            const { doc, getDoc } = await import('firebase/firestore');
+            const { db } = await import('../../lib/firebase');
 
-                // Primero intentar en memories
-                const memoryRef = doc(db, `spaces/${spaceId}/entries/${entryId}`);
-                const memorySnap = await getDoc(memoryRef);
+            // Primero intentar en memories
+            const memoryRef = doc(db, `spaces/${spaceId}/entries/${entryId}`);
+            const memorySnap = await getDoc(memoryRef);
 
-                if (memorySnap.exists()) {
-                    const data = memorySnap.data();
-                    setEntry({ id: memorySnap.id, ...data });
-                    return;
-                }
-
-                setError('Entry not found');
-            } catch (err) {
-                console.error('Error fetching entry:', err);
-                setError('Error loading entry');
-            } finally {
-                setLoading(false);
+            if (memorySnap.exists()) {
+                const data = memorySnap.data();
+                setEntry({ id: memorySnap.id, ...data });
+                return;
             }
-        };
 
+            setError('Entry not found');
+        } catch (err) {
+            console.error('Error fetching entry:', err);
+            setError('Error loading entry');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchEntry();
     }, [spaceId, entryId]);
 
-    return { entry, loading, error };
+    // Función para refrescar la entrada
+    const refreshEntry = () => {
+        fetchEntry();
+    };
+
+    return { entry, loading, error, refreshEntry };
 }
 
 export default function MemoryDetail() {
@@ -96,7 +101,7 @@ export default function MemoryDetail() {
     // Usar el spaceId de la URL o el del auth como fallback
     const currentSpaceId = spaceId || authSpaceId;
 
-    const { entry, loading, error } = useSpecificEntry(currentSpaceId, entryId);
+    const { entry, loading, error, refreshEntry } = useSpecificEntry(currentSpaceId, entryId);
 
     // Skeleton loading optimizado
     if (loading) {
@@ -171,7 +176,9 @@ export default function MemoryDetail() {
                         entryTitle={entry.title}
                         spaceId={currentSpaceId!}
                         media={entry.media}
+                        hasSpotify={!!entry.spotify}
                         onDeleted={() => navigate(-1)}
+                        onUpdated={refreshEntry}
                     />
                 </div>
             </div>
@@ -201,8 +208,10 @@ export default function MemoryDetail() {
                                 src={cover.url}
                                 controls
                                 className="h-full w-full object-cover"
-                                poster={cover.url} // Use the same URL as poster, Firebase might provide thumbnail
                                 preload="metadata"
+                                onError={(e) => {
+                                    console.error('Error loading video:', cover.url, e);
+                                }}
                             />
                         ) : null}
                     </div>
@@ -214,6 +223,53 @@ export default function MemoryDetail() {
                 {entry.description && (
                     <div className="bg-white rounded-2xl p-4 mb-4 border shadow-sm">
                         <p className="text-gray-700 leading-relaxed">{entry.description}</p>
+                    </div>
+                )}
+
+                {/* Información de Spotify */}
+                {entry.spotify && (
+                    <div className="bg-white rounded-2xl p-4 mb-4 border shadow-sm">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <span className="text-sm font-semibold text-gray-900">Música de fondo</span>
+                        </div>
+
+                        <div className="mb-3">
+                            <h4 className="font-semibold text-gray-900 mb-1">{entry.spotify.name}</h4>
+                            <p className="text-sm text-gray-600">{entry.spotify.artists}</p>
+                            {entry.spotify.album_name && (
+                                <p className="text-xs text-gray-500 mt-1">De "{entry.spotify.album_name}"</p>
+                            )}
+                        </div>
+
+                        {/* Reproductor de música */}
+                        {entry.spotify.preview_url && (
+                            <SpotifyPlayer
+                                previewUrl={entry.spotify.preview_url}
+                                compact={true}
+                            />
+                        )}
+
+                        {/* Enlace a Spotify */}
+                        {entry.spotify.spotify_url && (
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                                <a
+                                    href={entry.spotify.spotify_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 text-sm font-medium"
+                                >
+                                    <span>Abrir en Spotify</span>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                </a>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -261,6 +317,9 @@ export default function MemoryDetail() {
                                             controls
                                             className="h-full w-full object-cover"
                                             preload="metadata"
+                                            onError={(e) => {
+                                                console.error('Error loading video:', m.url, e);
+                                            }}
                                         />
                                     )}
                                 </div>

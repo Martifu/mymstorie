@@ -208,6 +208,7 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
                                 entryTitle={entry.title}
                                 spaceId={currentSpaceId!}
                                 media={entry.media}
+                                hasSpotify={!!entry.spotify}
                                 onDeleted={() => {
                                     onDeleted?.();
                                     onClose();
