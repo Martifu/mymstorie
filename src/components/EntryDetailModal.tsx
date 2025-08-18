@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Calendar } from 'phosphor-react';
 import { ArrowLeft } from 'iconsax-react';
 import { useAuth } from '../features/auth/useAuth';
-import { SimpleImage, EntryOptionsMenu } from '../components';
+import { MediaCarousel, EntryOptionsMenu } from '../components';
 
 import birthdayIcon from '../assets/birthday-icon.svg';
 import milestoneIcon from '../assets/milestone-icon.svg';
@@ -216,34 +216,12 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
 
                         {/* Content */}
                         <div className="flex-1 overflow-y-auto">
-                            {/* Imagen principal */}
-                            {entry.media?.[0] && (
-                                <div className="relative mx-3 mt-4 mb-6">
-                                    <div className="aspect-[3/4] bg-gray-100 overflow-hidden rounded-2xl">
-                                        {entry.media[0].type === 'image' ? (
-                                            <SimpleImage
-                                                src={entry.media[0].url}
-                                                alt={entry.title}
-                                                className="h-full w-full object-cover"
-                                                priority={true}
-                                                blur={true}
-                                                fallback={
-                                                    <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-                                                        <span className="text-gray-500">Sin imagen</span>
-                                                    </div>
-                                                }
-                                            />
-                                        ) : entry.media[0].type === 'video' ? (
-                                            <video
-                                                src={entry.media[0].url}
-                                                controls
-                                                className="h-full w-full object-cover"
-                                                poster={entry.media[0].url}
-                                                preload="metadata"
-                                            />
-                                        ) : null}
-                                    </div>
-                                </div>
+                            {/* Media Carousel */}
+                            {entry.media && entry.media.length > 0 && (
+                                <MediaCarousel
+                                    media={entry.media}
+                                    title={entry.title}
+                                />
                             )}
 
                             <div className="px-4 pb-6 space-y-4">
@@ -278,40 +256,7 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
                                     </div>
                                 )}
 
-                                {/* Media adicional */}
-                                {entry.media && entry.media.length > 1 && (
-                                    <div className="bg-white rounded-2xl p-4 border shadow-sm">
-                                        <h3 className="text-lg font-semibold mb-4 text-gray-900">
-                                            Más contenido ({entry.media.length - 1})
-                                        </h3>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {entry.media.slice(1).map((m: any, idx: number) => (
-                                                <div key={idx} className="aspect-square overflow-hidden rounded-xl bg-gray-100">
-                                                    {m.type === 'image' ? (
-                                                        <SimpleImage
-                                                            src={m.url}
-                                                            alt={`${entry.title} - imagen ${idx + 2}`}
-                                                            className="h-full w-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                                                            blur={true}
-                                                            fallback={
-                                                                <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-                                                                    <span className="text-gray-500 text-xs">Sin imagen</span>
-                                                                </div>
-                                                            }
-                                                        />
-                                                    ) : (
-                                                        <video
-                                                            src={m.url}
-                                                            controls
-                                                            className="h-full w-full object-cover"
-                                                            preload="metadata"
-                                                        />
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+
                             </div>
                         </div>
                     </>

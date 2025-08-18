@@ -26,6 +26,8 @@ export function EntryOptionsMenu({
     const menuRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
+
+
     // Cerrar menú al hacer click fuera
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -215,7 +217,7 @@ export function EntryOptionsMenu({
                 <div
                     className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
                     style={{
-                        zIndex: 99999,
+                        zIndex: 999999,
                         position: 'fixed',
                         top: 0,
                         left: 0,
