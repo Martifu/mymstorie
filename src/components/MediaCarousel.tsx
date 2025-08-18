@@ -109,13 +109,13 @@ export function MediaCarousel({ media, title, className = '' }: MediaCarouselPro
                 >
                     {media.map((item, index) => (
                         <div key={index} className="w-full h-full flex-shrink-0">
-                                                        {item.type === 'image' ? (
+                            {item.type === 'image' ? (
                                 <img
                                     src={item.url}
                                     alt={`${title} - imagen ${index + 1}`}
                                     className="h-full w-full object-cover cursor-pointer"
-                                    style={{ 
-                                        minHeight: '100%', 
+                                    style={{
+                                        minHeight: '100%',
                                         minWidth: '100%',
                                         objectFit: 'cover'
                                     }}
