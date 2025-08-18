@@ -99,6 +99,9 @@ export default {
       scale: {
         pressed: '0.98',
       },
+      animation: {
+        'spin-slow': 'spin 6s linear infinite',
+      },
     },
   },
   plugins: [

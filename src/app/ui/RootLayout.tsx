@@ -106,13 +106,13 @@ export function RootLayout() {
                     </>
                 )}
             </div>
-            {showFAB && (
+            {/* {showFAB && (
                 <FAB onPick={(type) => {
                     if (type === 'memory') navigate('/memories/new');
                     else if (type === 'goal') navigate('/goals/new');
                     else navigate('/child/new');
                 }} />
-            )}
+            )} */}
             {showNavbar && (
                 <motion.nav
                     initial={{ y: 100, opacity: 0 }}

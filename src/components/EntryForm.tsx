@@ -2,6 +2,8 @@ import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import imageCompression from 'browser-image-compression';
 import { FileUpload } from './FileUpload';
+import { SpotifySearch } from './SpotifySearch';
+import type { EntrySpotifyData } from '../features/spotify/spotifyService';
 
 interface FileWithPreview extends File {
     preview?: string;
@@ -11,12 +13,13 @@ type FormValues = {
     title: string; description?: string; date: string; tags?: string;
 };
 
-export function EntryForm({ onSubmit, initialTitle = '' }: { onSubmit: (data: FormData, onProgress?: (fileName: string, progress: number) => void) => Promise<void>; initialTitle?: string }) {
+export function EntryForm({ onSubmit, initialTitle = '' }: { onSubmit: (data: FormData, onProgress?: (fileName: string, progress: number) => void, spotifyData?: EntrySpotifyData | null) => Promise<void>; initialTitle?: string }) {
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
         defaultValues: { title: initialTitle }
     });
     const [files, setFiles] = useState<FileWithPreview[]>([]);
     const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+    const [selectedTrack, setSelectedTrack] = useState<EntrySpotifyData | null>(null);
 
     async function compress(file: File): Promise<File> {
         const compressed = await imageCompression(file, { maxWidthOrHeight: 1440, initialQuality: 0.82, useWebWorker: true });
@@ -39,9 +42,9 @@ export function EntryForm({ onSubmit, initialTitle = '' }: { onSubmit: (data: Fo
 
         await onSubmit(fd, (fileName, progress) => {
             setUploadProgress((prev: { [key: string]: number }) => ({ ...prev, [fileName]: progress }));
-        });
+        }, selectedTrack);
 
-        // Limpiar archivos después de envío exitoso
+        // Limpiar archivos y datos después de envío exitoso
         files.forEach(file => {
             if (file.preview) {
                 URL.revokeObjectURL(file.preview);
@@ -49,6 +52,7 @@ export function EntryForm({ onSubmit, initialTitle = '' }: { onSubmit: (data: Fo
         });
         setFiles([]);
         setUploadProgress({});
+        setSelectedTrack(null);
     });
 
     return (
@@ -79,6 +83,12 @@ export function EntryForm({ onSubmit, initialTitle = '' }: { onSubmit: (data: Fo
                     uploadProgress={uploadProgress}
                     isUploading={isSubmitting}
                     maxFiles={10}
+                />
+            </div>
+            <div>
+                <SpotifySearch
+                    onTrackSelect={setSelectedTrack}
+                    selectedTrack={selectedTrack}
                 />
             </div>
             <div className="sticky bottom-0 bg-surface p-4 -mx-4 border-t">

@@ -8,9 +8,9 @@ export default function NewMemory() {
     const navigate = useNavigate();
     const location = useLocation();
     const prefilledTitle = location.state?.prefilledTitle || '';
-    async function onSubmit(fd: FormData, onProgress?: (fileName: string, progress: number) => void) {
+    async function onSubmit(fd: FormData, onProgress?: (fileName: string, progress: number) => void, spotifyData?: any) {
         if (!spaceId) return;
-        await createMemory(spaceId, fd, onProgress);
+        await createMemory(spaceId, fd, onProgress, spotifyData);
         navigate('/');
     }
     return (

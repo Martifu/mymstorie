@@ -5,9 +5,7 @@ import { useSpaces } from '../../features/spaces/useSpaces';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Baby, Target, Heart, Plus, Bell } from 'phosphor-react';
 
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { SimpleImage, EntryDetailModal } from '../../components';
+import { SimpleImage, EntryDetailModal, FeedPost } from '../../components';
 
 export function Home() {
     const { spaceId, user } = useAuth();
@@ -68,41 +66,25 @@ export function Home() {
     const { entries: goals } = useEntries(spaceId, 'goal');
     const { entries: childEvents } = useEntries(spaceId, 'child_event');
 
-    // Procesar datos para el feed
+    // Procesar datos para el feed estilo red social
     const feedData = useMemo(() => {
-        // Últimos 3 recuerdos
-        const recentMemories = memories
-            .sort((a, b) => {
-                const dateA = (a as any).date?.toDate?.() || new Date(a.date);
-                const dateB = (b as any).date?.toDate?.() || new Date(b.date);
-                return dateB.getTime() - dateA.getTime();
-            })
-            .slice(0, 3);
+        // Combinar todas las entries en un solo feed
+        const allEntries = [
+            ...memories.map(entry => ({ ...entry, type: 'memory' as const })),
+            ...childEvents.map(entry => ({ ...entry, type: 'child_event' as const })),
+            ...goals.map(entry => ({ ...entry, type: 'goal' as const }))
+        ];
 
-        // Últimos 3 eventos del hijo
-        const recentChildEvents = childEvents
-            .sort((a, b) => {
-                const dateA = (a as any).date?.toDate?.() || new Date(a.date);
-                const dateB = (b as any).date?.toDate?.() || new Date(b.date);
-                return dateB.getTime() - dateA.getTime();
-            })
-            .slice(0, 3);
-
-        // Próximos 3 objetivos pendientes
-        const pendingGoals = goals
-            .filter(goal => (goal as any).status !== 'completed')
-            .sort((a, b) => {
-                const dateA = (a as any).createdAt?.toDate?.() || new Date(a.date);
-                const dateB = (b as any).createdAt?.toDate?.() || new Date(b.date);
-                return dateB.getTime() - dateA.getTime();
-            })
-            .slice(0, 3);
+        // Ordenar por fecha de creación/modificación más reciente
+        const sortedEntries = allEntries.sort((a, b) => {
+            const dateA = (a as any).date?.toDate?.() || (a as any).createdAt?.toDate?.() || new Date(a.date);
+            const dateB = (b as any).date?.toDate?.() || (b as any).createdAt?.toDate?.() || new Date(b.date);
+            return dateB.getTime() - dateA.getTime();
+        });
 
         return {
-            memories: recentMemories,
-            childEvents: recentChildEvents,
-            goals: pendingGoals,
-            totalCount: memories.length + goals.length + childEvents.length
+            feedEntries: sortedEntries.slice(0, 10), // Mostrar últimas 10 entries
+            totalCount: allEntries.length
         };
     }, [memories, goals, childEvents]);
 
@@ -176,110 +158,66 @@ export function Home() {
                     </div>
                 </div>
 
-                {/* Quick Access Cards */}
-                <section className="mb-6">
-                    <div className="mb-4 px-4">
-                        <h2 className="text-lg font-bold text-gray-900">Acceso Rápido</h2>
-                    </div>
-
-                    <div className="flex gap-4 px-4 overflow-x-auto scrollbar-hide pb-2">
-                        <QuickAccessCard
-                            title="Recuerdos"
-                            subtitle="Fotos y videos"
-                            icon="📸"
-                            gradient="from-brand-purple to-purple-600"
-                            onClick={() => navigate('/memories')}
-                        />
-                        <QuickAccessCard
-                            title="Objetivos"
-                            subtitle="Metas familiares"
-                            icon="🎯"
-                            gradient="from-brand-blue to-blue-600"
-                            onClick={() => navigate('/goals')}
-                        />
-                        <QuickAccessCard
-                            title="Hijo"
-                            subtitle="Hitos y eventos"
-                            icon="👶"
-                            gradient="from-brand-gold to-yellow-600"
-                            onClick={() => navigate('/child')}
-                        />
-                    </div>
-                </section>
-
-                {/* Recent Activity Feed */}
+                {/* Feed estilo red social */}
                 <section className="pb-6">
-                    <div className="mb-4 px-4">
-                        <h2 className="text-lg font-bold text-gray-900">Actividad Reciente</h2>
+                    <div className="mb-6 px-4">
+                        <h2 className="text-xl font-bold text-gray-900">Tu historia familiar</h2>
+                        <p className="text-gray-600 text-sm mt-1">Los momentos más recientes de tu familia</p>
                     </div>
 
-                    <div className="space-y-3 px-4">
-                        {/* Mostrar recuerdos recientes */}
-                        {feedData.memories.slice(0, 2).map((memory) => {
-                            const hasMedia = memory.media && Array.isArray(memory.media) && memory.media.length > 0;
-                            const mediaUrl = hasMedia && memory.media ? memory.media[0]?.url : undefined;
-
-                            return (
-                                <ActivityFeedItem
-                                    key={`memory-${memory.id}`}
-                                    type="memory"
-                                    title={memory.title}
-                                    subtitle={memory.description || "Nuevo recuerdo guardado"}
-                                    time={format((memory as any).date?.toDate?.() || new Date(memory.date), "d 'de' MMM", { locale: es })}
-                                    avatar="📸"
-                                    hasMedia={hasMedia}
-                                    mediaUrl={mediaUrl}
-                                    onClick={() => setSelectedEntryId(memory.id)}
-                                />
-                            );
-                        })}
-
-                        {/* Mostrar eventos del hijo */}
-                        {feedData.childEvents.slice(0, 2).map((event) => (
-                            <ActivityFeedItem
-                                key={`child-${event.id}`}
-                                type="child"
-                                title={event.title}
-                                subtitle={event.description || "Nuevo hito registrado"}
-                                time={format((event as any).date?.toDate?.() || new Date(event.date), "d 'de' MMM", { locale: es })}
-                                avatar="👶"
-                                onClick={() => setSelectedEntryId(event.id)}
-                            />
-                        ))}
-
-                        {/* Mostrar objetivos pendientes */}
-                        {feedData.goals.slice(0, 1).map((goal) => (
-                            <ActivityFeedItem
-                                key={`goal-${goal.id}`}
-                                type="goal"
-                                title={goal.title}
-                                subtitle="Objetivo pendiente"
-                                time="Pendiente"
-                                avatar={(goal as any).goalIcon || "🎯"}
-                                onClick={() => navigate(`/goals/${goal.id}/complete`)}
+                    <div className="space-y-4 px-4">
+                        {feedData.feedEntries.map((entry) => (
+                            <FeedPost
+                                key={`${entry.type}-${entry.id}`}
+                                entry={{
+                                    ...entry,
+                                    date: (entry as any).date?.toDate?.() || (entry as any).createdAt?.toDate?.() || new Date(entry.date)
+                                }}
+                                onClick={() => {
+                                    if (entry.type === 'goal') {
+                                        navigate(`/goals/${entry.id}/complete`);
+                                    } else {
+                                        setSelectedEntryId(entry.id);
+                                    }
+                                }}
+                                onOptionsClick={() => {
+                                    // TODO: Implementar menú de opciones
+                                    console.log('Opciones para:', entry.id);
+                                }}
                             />
                         ))}
                     </div>
 
+                    {/* Estado vacío */}
                     {feedData.totalCount === 0 && (
-                        <div className="text-center py-12 px-4">
-                            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Heart size={32} className="text-gray-400" />
+                        <div className="text-center py-16 px-4">
+                            <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-purple-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Heart size={32} className="text-purple-500" weight="fill" />
                             </div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                ¡Comienza tu historia familiar!
+                            <h3 className="text-xl font-bold text-gray-900 mb-3">
+                                ¡Tu historia familiar está esperando!
                             </h3>
-                            <p className="text-gray-600 mb-6">
-                                Crea tu primer recuerdo, objetivo o evento del hijo
+                            <p className="text-gray-600 mb-8 max-w-sm mx-auto leading-relaxed">
+                                Comparte tu primer momento especial y empieza a construir los recuerdos que durarán para siempre
                             </p>
-                            <div className="flex flex-col gap-3">
-                                <button
-                                    onClick={() => navigate('/memories/new')}
-                                    className="bg-brand-purple text-white px-6 py-3 rounded-xl font-medium"
-                                >
-                                    📸 Crear primer recuerdo
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => navigate('/memories/new')}
+                                className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-8 py-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all active:scale-95"
+                            >
+                                ✨ Crear mi primer post
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Botón para ver más si hay más contenido */}
+                    {feedData.totalCount > 10 && (
+                        <div className="text-center mt-6">
+                            <button
+                                onClick={() => navigate('/memories')}
+                                className="text-purple-600 font-medium hover:text-purple-700 transition-colors"
+                            >
+                                Ver todos los {feedData.totalCount} posts →
+                            </button>
                         </div>
                     )}
                 </section>
@@ -373,100 +311,3 @@ export function Home() {
     );
 }
 
-// Componente Quick Access Card
-function QuickAccessCard({
-    title,
-    subtitle,
-    icon,
-    gradient,
-    onClick
-}: {
-    title: string;
-    subtitle: string;
-    icon: string;
-    gradient: string;
-    onClick: () => void;
-}) {
-    return (
-        <div
-            onClick={onClick}
-            className={`bg-gradient-to-br ${gradient} rounded-2xl p-5 cursor-pointer relative overflow-hidden min-w-[160px] flex-shrink-0`}
-        >
-            <div className="absolute top-2 right-2 w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-2xl">{icon}</span>
-            </div>
-            <div className="text-white mt-8">
-                <h3 className="font-bold text-lg mb-1">{title}</h3>
-                <p className="text-white/80 text-sm">{subtitle}</p>
-            </div>
-        </div>
-    );
-}
-
-// Componente Activity Feed Item
-function ActivityFeedItem({
-    type,
-    title,
-    subtitle,
-    time,
-    avatar,
-    hasMedia = false,
-    mediaUrl,
-    onClick
-}: {
-    type: 'memory' | 'child' | 'goal';
-    title: string;
-    subtitle: string;
-    time: string;
-    avatar: string;
-    hasMedia?: boolean;
-    mediaUrl?: string;
-    onClick: () => void;
-}) {
-    const getStatusColor = () => {
-        switch (type) {
-            case 'memory': return 'bg-green-500';
-            case 'child': return 'bg-blue-500';
-            case 'goal': return 'bg-orange-500';
-            default: return 'bg-gray-500';
-        }
-    };
-
-    return (
-        <div
-            onClick={onClick}
-            className="bg-white rounded-2xl p-4 border hover:shadow-md transition-all cursor-pointer active:scale-[0.98]"
-        >
-            <div className="flex items-start gap-3">
-                <div className="relative">
-                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
-                        <SimpleImage
-                            src={hasMedia && mediaUrl ? mediaUrl : undefined}
-                            alt={title}
-                            className="w-12 h-12 rounded-full object-cover"
-                            blur={true}
-                            fallback={
-                                <div className="w-full h-full flex items-center justify-center">
-                                    <span className="text-xl">{avatar}</span>
-                                    {hasMedia && mediaUrl && (
-                                        <div className="absolute inset-0 bg-red-100 opacity-20 rounded-full" title="Image failed to load" />
-                                    )}
-                                </div>
-                            }
-                            onError={() => console.warn('Failed to load activity feed image:', mediaUrl)}
-                        />
-                    </div>
-                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 ${getStatusColor()} rounded-full border-2 border-white`} />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between mb-1">
-                        <h3 className="font-semibold text-gray-900 truncate">{title}</h3>
-                        <span className="text-xs text-gray-500 flex-shrink-0">{time}</span>
-                    </div>
-                    <p className="text-sm text-gray-600 line-clamp-2">{subtitle}</p>
-                </div>
-            </div>
-        </div>
-    );
-}

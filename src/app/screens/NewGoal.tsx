@@ -64,7 +64,7 @@ export default function NewGoal() {
         fd.append('status', 'pending'); // Nuevo objetivo siempre empieza como pendiente
 
         try {
-            await createGoal(spaceId, fd);
+            await createGoal(spaceId, fd, null); // Por ahora null, se puede mejorar más adelante
             navigate('/goals');
         } catch (error) {
             console.error('Error al crear objetivo:', error);

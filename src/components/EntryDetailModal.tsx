@@ -4,6 +4,7 @@ import { X, Calendar } from 'phosphor-react';
 import { ArrowLeft } from 'iconsax-react';
 import { useAuth } from '../features/auth/useAuth';
 import { MediaCarousel, EntryOptionsMenu } from '../components';
+import { FloatingVinylPlayer } from './FloatingVinylPlayer';
 
 import birthdayIcon from '../assets/birthday-icon.svg';
 import milestoneIcon from '../assets/milestone-icon.svg';
@@ -257,8 +258,23 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
                                 )}
 
 
+
+
                             </div>
                         </div>
+
+                        {/* Vinyl Player FAB - Fixed en esquina inferior derecha */}
+                        {entry.spotify && (
+                            <div className="fixed bottom-4 right-4 z-50">
+                                <FloatingVinylPlayer
+                                    trackData={{
+                                        preview_url: entry.spotify.preview_url,
+                                        album_image: entry.spotify.album_image
+                                    }}
+                                    size="medium"
+                                />
+                            </div>
+                        )}
                     </>
                 )}
             </div>

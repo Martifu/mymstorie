@@ -90,7 +90,8 @@ export default function NewChildEvent() {
                 (fileName, progress) => {
                     setUploadProgress((prev: { [key: string]: number }) => ({ ...prev, [fileName]: progress }));
                 },
-                values.childCategory === 'birth' ? handleBirthEvent : undefined
+                values.childCategory === 'birth' ? handleBirthEvent : undefined,
+                null // Por ahora null, se puede mejorar más adelante
             );
 
             // Limpiar archivos después de envío exitoso

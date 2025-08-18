@@ -11,6 +11,16 @@ export type EntryDoc = {
     media?: { url: string; type: 'image' | 'video' }[];
     favorites?: Record<string, true>;
     reactions?: Record<string, 'heart'>;
+    spotify?: {
+        id: string;
+        name: string;
+        artists: string;
+        preview_url: string | null;
+        spotify_url: string;
+        album_name: string;
+        album_image: string | null;
+        duration_ms: number;
+    };
 };
 
 export function useEntries(spaceId: string | null, type: 'all' | 'memory' | 'goal' | 'child_event') {

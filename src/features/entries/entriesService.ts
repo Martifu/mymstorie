@@ -1,8 +1,9 @@
 import { addDoc, collection, doc, serverTimestamp, setDoc, updateDoc, deleteField, getDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { auth, db, storage } from '../../lib/firebase';
+import type { EntrySpotifyData } from '../spotify/spotifyService';
 
-export async function createMemory(spaceId: string, form: FormData, onProgress?: (fileName: string, progress: number) => void) {
+export async function createMemory(spaceId: string, form: FormData, onProgress?: (fileName: string, progress: number) => void, spotifyData?: EntrySpotifyData | null) {
   const title = String(form.get('title') || '');
   const dateStr = String(form.get('date'));
   const date = (() => {
@@ -56,6 +57,11 @@ export async function createMemory(spaceId: string, form: FormData, onProgress?:
     updatedAt: serverTimestamp(),
   };
 
+  // Añadir información de Spotify si está disponible
+  if (spotifyData) {
+    entry.spotify = spotifyData;
+  }
+
   // Remover campos undefined/vacíos
   Object.keys(entry).forEach(key => {
     if (entry[key] === undefined || entry[key] === '') {
@@ -66,7 +72,7 @@ export async function createMemory(spaceId: string, form: FormData, onProgress?:
   await addDoc(collection(db, `spaces/${spaceId}/entries`), entry);
 }
 
-export async function createGoal(spaceId: string, form: FormData) {
+export async function createGoal(spaceId: string, form: FormData, spotifyData?: EntrySpotifyData | null) {
   const title = String(form.get('title') || '');
   const goalCategory = String(form.get('goalCategory') || 'logro');
   const goalIcon = String(form.get('goalIcon') || '🎯');
@@ -104,6 +110,11 @@ export async function createGoal(spaceId: string, form: FormData) {
     updatedAt: serverTimestamp(),
   };
 
+  // Añadir información de Spotify si está disponible
+  if (spotifyData) {
+    entry.spotify = spotifyData;
+  }
+
   // Agregar descripción solo si existe (para objetivos completados)
   if (description.trim()) {
     entry.description = description;
@@ -124,7 +135,7 @@ export async function createGoal(spaceId: string, form: FormData) {
   await addDoc(collection(db, `spaces/${spaceId}/entries`), entry);
 }
 
-export async function createChildEvent(spaceId: string, form: FormData, onProgress?: (fileName: string, progress: number) => void, onBirthEvent?: (name: string, gender: 'male' | 'female', birthDate: Date) => Promise<void>) {
+export async function createChildEvent(spaceId: string, form: FormData, onProgress?: (fileName: string, progress: number) => void, onBirthEvent?: (name: string, gender: 'male' | 'female', birthDate: Date) => Promise<void>, spotifyData?: EntrySpotifyData | null) {
   console.log('createChildEvent iniciado');
   const title = String(form.get('title') || '');
   const milestoneType = String(form.get('milestoneType') || 'custom');
@@ -210,6 +221,11 @@ export async function createChildEvent(spaceId: string, form: FormData, onProgre
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
+
+  // Añadir información de Spotify si está disponible
+  if (spotifyData) {
+    entry.spotify = spotifyData;
+  }
 
   // Agregar campos específicos del nacimiento
   if (childCategory === 'birth') {
