@@ -163,10 +163,10 @@ export function FeedPost({ entry, onClick, onOptionsClick }: FeedPostProps) {
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-green-800 font-medium text-xs truncate">
-                                {entry.spotify.name}
+                                {entry.spotify?.name}
                             </p>
                             <p className="text-green-600 text-xs truncate">
-                                {entry.spotify.artists}
+                                {entry.spotify?.artists}
                             </p>
                         </div>
                         <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />

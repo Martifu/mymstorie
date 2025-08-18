@@ -1,14 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getUserProfile } from '../features/spaces/spacesService';
-
-type UserProfile = {
-    uid: string;
-    displayName: string | null;
-    email: string | null;
-    photoURL: string | null;
-    createdAt?: Date;
-    lastLoginAt?: Date;
-};
+import type { UserProfile } from '../features/spaces/spacesService';
 
 // Cache simple para evitar múltiples llamadas a Firebase
 const userProfileCache = new Map<string, UserProfile | null>();

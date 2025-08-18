@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import type { ComponentType } from 'react';
 import { useAuth } from '../../features/auth/useAuth';
@@ -8,7 +8,6 @@ import { Onboarding } from '../screens/Onboarding';
 import { Login } from '../screens/Login';
 import { FullScreenLoader } from '../../components';
 import { Home2, Image, DocumentText, Profile as ProfileIcon, People } from 'iconsax-react';
-import { FAB } from '../../components';
 import { motion } from 'framer-motion';
 
 // Import main screens for persistent mounting
@@ -22,7 +21,6 @@ export function RootLayout() {
     const { user, loading, signInWithEmail, signUpWithEmail, resetPassword } = useAuth();
     const { userProfile, loading: spacesLoading } = useSpaces();
     const location = useLocation();
-    const navigate = useNavigate();
     const isCreationPage = location.pathname.includes('/new') || location.pathname.includes('/edit');
     const isDetailPage = location.pathname.includes('/memories/') && location.pathname.split('/').length > 2;
     const isCompleteGoalPage = location.pathname.includes('/complete');
@@ -31,7 +29,6 @@ export function RootLayout() {
     // Special pages that need Outlet (non-persistent)
     const isSpecialPage = isCreationPage || isDetailPage || isCompleteGoalPage || isGoalDetailPage;
 
-    const showFAB = !location.pathname.startsWith('/profile') && !isSpecialPage;
     const showNavbar = !isSpecialPage;
 
     // Determine which main screen to show
