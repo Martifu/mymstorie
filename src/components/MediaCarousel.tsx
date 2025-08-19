@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { CaretLeft, CaretRight } from 'phosphor-react';
 import { ImageViewer } from './ImageViewer';
+import { VideoThumbnail } from './VideoThumbnail';
 
 interface MediaItem {
     url: string;
@@ -123,11 +124,9 @@ export function MediaCarousel({ media, title, className = '' }: MediaCarouselPro
                                     loading={index === 0 ? "eager" : "lazy"}
                                 />
                             ) : (
-                                <video
+                                <VideoThumbnail
                                     src={item.url}
-                                    controls
-                                    className="h-full w-full object-cover"
-                                    preload="metadata"
+                                    className="h-full w-full"
                                     onError={(e) => {
                                         console.error('Error loading video:', item.url, e);
                                     }}

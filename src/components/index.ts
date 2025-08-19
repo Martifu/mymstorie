@@ -13,5 +13,6 @@ export * from './MediaCarousel';
 export * from './ImageViewer';
 export * from './AddMusicModal';
 export * from './SpotifyPlayer';
+export * from './VideoThumbnail';
 
 

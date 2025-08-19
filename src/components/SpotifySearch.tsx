@@ -246,11 +246,6 @@ function TrackItem({ track, onSelect }: { track: SpotifyTrack; onSelect: (trackW
     const [currentPreviewUrl, setCurrentPreviewUrl] = useState<string | null>(track.preview_url);
     const [isSelecting, setIsSelecting] = useState(false);
 
-    const formatDuration = (ms: number) => {
-        const minutes = Math.floor(ms / 60000);
-        const seconds = Math.floor((ms % 60000) / 1000);
-        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    };
 
     const handlePlayPreview = async () => {
         if (isPlaying) {
@@ -342,20 +337,7 @@ function TrackItem({ track, onSelect }: { track: SpotifyTrack; onSelect: (trackW
 
                 {/* Duration and Actions */}
                 <div className="flex-shrink-0 flex items-center gap-2">
-                    <div className="text-center">
-                        <span className="text-xs text-gray-500 block">
-                            {formatDuration(track.duration_ms)}
-                        </span>
-                        {track.preview_url ? (
-                            <span className="text-xs text-green-600 font-medium">
-                                30s preview
-                            </span>
-                        ) : (
-                            <span className="text-xs text-orange-600 font-medium">
-                                Preview bajo demanda
-                            </span>
-                        )}
-                    </div>
+
 
                     {/* Preview Button */}
                     <button

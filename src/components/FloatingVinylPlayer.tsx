@@ -112,9 +112,7 @@ export function FloatingVinylPlayer({
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     color: 'black',
-                    ...(isPlaying && {
-                        animation: 'spin 4s linear infinite'
-                    })
+                    // Animación removida para optimizar rendimiento
                 }}
             >
                 {/* Vinyl effect overlay */}

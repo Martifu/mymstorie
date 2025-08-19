@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../features/auth/useAuth';
 import { ArrowLeft, Calendar } from 'iconsax-react';
-import { SimpleImage, EntryOptionsMenu, SpotifyPlayer } from '../../components';
+import { SimpleImage, EntryOptionsMenu, SpotifyPlayer, VideoThumbnail } from '../../components';
 
 import birthdayIcon from '../../assets/birthday-icon.svg';
 import milestoneIcon from '../../assets/milestone-icon.svg';
@@ -312,11 +312,9 @@ export default function MemoryDetail() {
                                             }
                                         />
                                     ) : (
-                                        <video
+                                        <VideoThumbnail
                                             src={m.url}
-                                            controls
-                                            className="h-full w-full object-cover"
-                                            preload="metadata"
+                                            className="h-full w-full"
                                             onError={(e) => {
                                                 console.error('Error loading video:', m.url, e);
                                             }}
