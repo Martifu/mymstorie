@@ -23,82 +23,146 @@ export function SimpleVideoPlayer({
     const [thumbnail, setThumbnail] = useState<string | null>(null);
     const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(true);
     const [duration, setDuration] = useState<string>('');
-    const videoRef = useRef<HTMLVideoElement>(null);    // Generar thumbnail mejorado
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    // Event handlers
+    const handleVideoPlay = () => setIsPlaying(true);
+    const handleVideoPause = () => setIsPlaying(false);
+    const handleVideoEnded = () => {
+        setIsPlaying(false);
+        setShowPlayer(false); // Volver al thumbnail cuando termine
+    };
+    const handleVideoError = (e: any) => {
+        console.error('Video error:', src, e);
+        setIsPlaying(false);
+        setShowPlayer(false); // Volver al thumbnail en caso de error
+        onError?.(e);
+    };
+
+    // Generar thumbnail mejorado
     useEffect(() => {
         if (!src) return;
 
-        const generateThumbnail = () => {
-            const video = document.createElement('video');
-            video.src = src;
-            video.muted = true;
-            video.playsInline = true;
-            video.preload = 'metadata';
-            video.currentTime = 0;
+        let isMounted = true;
+        let videoElement: HTMLVideoElement | null = null;
 
-            const onLoadedData = () => {
-                try {
-                    // Esperar un poco para asegurar que el frame esté disponible
-                    setTimeout(() => {
-                        if (video.videoWidth > 0 && video.videoHeight > 0) {
+        const generateThumbnail = () => {
+            try {
+                videoElement = document.createElement('video');
+                videoElement.src = src;
+                videoElement.muted = true;
+                videoElement.playsInline = true;
+                videoElement.preload = 'metadata';
+                videoElement.crossOrigin = 'anonymous';
+                videoElement.currentTime = 0;
+
+                const cleanup = () => {
+                    if (videoElement) {
+                        videoElement.removeEventListener('loadeddata', onLoadedData);
+                        videoElement.removeEventListener('loadedmetadata', onLoadedMetadata);
+                        videoElement.removeEventListener('error', onError);
+                        videoElement.removeEventListener('seeked', onSeeked);
+                        videoElement.remove();
+                        videoElement = null;
+                    }
+                };
+
+                const onLoadedData = () => {
+                    if (!isMounted || !videoElement) return;
+                    try {
+                        // Ir a 0.5 segundos para un mejor thumbnail
+                        videoElement.currentTime = Math.min(0.5, videoElement.duration * 0.1);
+                    } catch (error) {
+                        console.warn('Could not seek video for thumbnail:', error);
+                        onSeeked(); // Intentar capturar el frame actual
+                    }
+                };
+
+                const onSeeked = () => {
+                    if (!isMounted || !videoElement) return;
+                    try {
+                        if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
                             const canvas = document.createElement('canvas');
                             const ctx = canvas.getContext('2d');
 
                             if (ctx) {
-                                canvas.width = video.videoWidth;
-                                canvas.height = video.videoHeight;
-                                ctx.drawImage(video, 0, 0);
+                                canvas.width = videoElement.videoWidth;
+                                canvas.height = videoElement.videoHeight;
+                                ctx.drawImage(videoElement, 0, 0);
 
                                 canvas.toBlob((blob) => {
-                                    if (blob) {
+                                    if (blob && isMounted) {
                                         const url = URL.createObjectURL(blob);
                                         setThumbnail(url);
                                     }
-                                }, 'image/jpeg', 0.8);
+                                    cleanup();
+                                }, 'image/jpeg', 0.7);
+                            } else {
+                                cleanup();
                             }
+                        } else {
+                            cleanup();
                         }
+                    } catch (error) {
+                        console.warn('Error generating thumbnail:', error);
+                        cleanup();
+                    }
+                    if (isMounted) {
                         setIsLoadingThumbnail(false);
-                    }, 100);
-                } catch (error) {
-                    console.warn('Error generating thumbnail:', error);
+                    }
+                };
+
+                const onLoadedMetadata = () => {
+                    if (!isMounted || !videoElement) return;
+                    try {
+                        if (videoElement.duration && !duration) {
+                            const minutes = Math.floor(videoElement.duration / 60);
+                            const seconds = Math.floor(videoElement.duration % 60);
+                            setDuration(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+                        }
+                    } catch (error) {
+                        console.warn('Error getting video duration:', error);
+                    }
+                };
+
+                const onError = () => {
+                    console.warn('Error loading video for thumbnail:', src);
+                    cleanup();
+                    if (isMounted) {
+                        setIsLoadingThumbnail(false);
+                    }
+                };
+
+                videoElement.addEventListener('loadeddata', onLoadedData);
+                videoElement.addEventListener('loadedmetadata', onLoadedMetadata);
+                videoElement.addEventListener('error', onError);
+                videoElement.addEventListener('seeked', onSeeked);
+
+                // Timeout de seguridad
+                setTimeout(() => {
+                    if (isMounted && videoElement) {
+                        cleanup();
+                        setIsLoadingThumbnail(false);
+                    }
+                }, 5000);
+
+            } catch (error) {
+                console.warn('Error creating video element:', error);
+                if (isMounted) {
                     setIsLoadingThumbnail(false);
                 }
-            };
-
-            const onLoadedMetadata = () => {
-                if (video.duration) {
-                    const minutes = Math.floor(video.duration / 60);
-                    const seconds = Math.floor(video.duration % 60);
-                    setDuration(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-                }
-            };
-
-            const onError = () => {
-                setIsLoadingThumbnail(false);
-            };
-
-            video.addEventListener('loadeddata', onLoadedData);
-            video.addEventListener('loadedmetadata', onLoadedMetadata);
-            video.addEventListener('error', onError);
-
-            // Limpieza después de 5 segundos
-            setTimeout(() => {
-                video.removeEventListener('loadeddata', onLoadedData);
-                video.removeEventListener('loadedmetadata', onLoadedMetadata);
-                video.removeEventListener('error', onError);
-                if (thumbnail && thumbnail.startsWith('blob:')) {
-                    URL.revokeObjectURL(thumbnail);
-                }
-            }, 5000);
+            }
         };
 
         generateThumbnail();
 
         return () => {
+            isMounted = false;
             if (thumbnail && thumbnail.startsWith('blob:')) {
                 URL.revokeObjectURL(thumbnail);
             }
         };
-    }, [src, thumbnail]);
+    }, [src]); // Removido thumbnail de las dependencias para evitar loops
 
     const handlePlayPause = () => {
         if (!showPlayer) {
@@ -118,16 +182,6 @@ export function SimpleVideoPlayer({
                 onError?.(error);
             });
         }
-    }; const handleVideoPlay = () => setIsPlaying(true);
-    const handleVideoPause = () => setIsPlaying(false);
-    const handleVideoEnded = () => {
-        setIsPlaying(false);
-        setShowPlayer(false); // Volver al thumbnail cuando termine
-    };
-    const handleVideoError = (e: any) => {
-        console.error('Video error:', e);
-        setIsPlaying(false);
-        onError?.(e);
     };
 
     return (
