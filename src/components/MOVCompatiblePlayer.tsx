@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Play } from 'phosphor-react';
 
-interface SimpleVideoPlayerProps {
+interface MOVCompatiblePlayerProps {
     src: string;
     className?: string;
     onError?: (e: any) => void;
@@ -10,72 +10,97 @@ interface SimpleVideoPlayerProps {
     showDuration?: boolean;
 }
 
-export function SimpleVideoPlayer({
+export function MOVCompatiblePlayer({
     src,
     className = "",
     onError,
     autoPlay = false,
     muted = true,
     showDuration = true
-}: SimpleVideoPlayerProps) {
+}: MOVCompatiblePlayerProps) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [showPlayer, setShowPlayer] = useState(autoPlay);
     const [thumbnail, setThumbnail] = useState<string | null>(null);
     const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(true);
     const [duration, setDuration] = useState<string>('');
+    const [videoSrc, setVideoSrc] = useState(src);
+    const [retryCount, setRetryCount] = useState(0);
     const videoRef = useRef<HTMLVideoElement>(null);
+
+    const isMOVFile = src.toLowerCase().includes('.mov');
+    const isMobile = /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent);
 
     // Event handlers
     const handleVideoPlay = () => setIsPlaying(true);
     const handleVideoPause = () => setIsPlaying(false);
     const handleVideoEnded = () => {
         setIsPlaying(false);
-        setShowPlayer(false); // Volver al thumbnail cuando termine
+        setShowPlayer(false);
     };
+
     const handleVideoError = (e: any) => {
-        console.error('Video error:', src, e);
+        console.error('Video error:', {
+            src: videoSrc,
+            originalSrc: src,
+            isMOVFile,
+            isMobile,
+            retryCount,
+            error: e
+        });
+
+        // Para archivos MOV en móvil, intentar diferentes estrategias
+        if (isMOVFile && isMobile && retryCount < 2) {
+            setRetryCount(prev => prev + 1);
+
+            if (retryCount === 0) {
+                // Primer intento: usar URL directa sin parámetros
+                const baseUrl = src.split('?')[0];
+                console.log('Retrying MOV with base URL:', baseUrl);
+                setVideoSrc(baseUrl);
+                return;
+            } else if (retryCount === 1) {
+                // Segundo intento: añadir parámetros de compatibilidad
+                const retryUrl = src.includes('?')
+                    ? `${src}&format=mp4&quality=720p`
+                    : `${src}?format=mp4&quality=720p`;
+                console.log('Retrying MOV with compatibility params:', retryUrl);
+                setVideoSrc(retryUrl);
+                return;
+            }
+        }
+
         setIsPlaying(false);
-        setShowPlayer(false); // Volver al thumbnail en caso de error
+        setShowPlayer(false);
         onError?.(e);
     };
 
-    // Generar thumbnail mejorado
+    // Generar thumbnail con manejo específico para MOV
     useEffect(() => {
-        if (!src) return;
+        if (!videoSrc) return;
 
         let isMounted = true;
         let videoElement: HTMLVideoElement | null = null;
         let timeoutId: NodeJS.Timeout | null = null;
 
-        // Detectar si es un archivo MOV en móvil
-        const isMOVFile = src.toLowerCase().includes('.mov');
-        const isMobile = /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent);
-
         const generateThumbnail = () => {
             try {
                 videoElement = document.createElement('video');
-                videoElement.src = src;
+                videoElement.src = videoSrc;
                 videoElement.muted = true;
                 videoElement.playsInline = true;
-                videoElement.preload = 'metadata';
 
-                // Para archivos MOV en móvil, usar configuración más conservadora
-                if (isMOVFile && isMobile) {
+                // Para archivos MOV, usar configuración específica
+                if (isMOVFile) {
                     videoElement.preload = 'none';
-                    console.log('MOV file detected on mobile, using conservative loading');
-                }
-
-                videoElement.crossOrigin = 'anonymous';
-                videoElement.currentTime = 0;
-
-                // Timeout para evitar que se cuelgue
-                timeoutId = setTimeout(() => {
-                    if (isMounted) {
-                        console.warn('Video thumbnail generation timeout:', src);
-                        setIsLoadingThumbnail(false);
-                        cleanup();
+                    videoElement.crossOrigin = 'anonymous';
+                    // Forzar tipo MIME para MOV
+                    if (isMobile) {
+                        console.log('Setting up MOV file for mobile...');
                     }
-                }, isMOVFile && isMobile ? 15000 : 10000); // Más tiempo para MOV en móvil
+                } else {
+                    videoElement.preload = 'metadata';
+                    videoElement.crossOrigin = 'anonymous';
+                }
 
                 const cleanup = () => {
                     if (timeoutId) {
@@ -85,7 +110,7 @@ export function SimpleVideoPlayer({
                     if (videoElement) {
                         videoElement.removeEventListener('loadeddata', onLoadedData);
                         videoElement.removeEventListener('loadedmetadata', onLoadedMetadata);
-                        videoElement.removeEventListener('error', onError);
+                        videoElement.removeEventListener('error', onVideoError);
                         videoElement.removeEventListener('seeked', onSeeked);
                         videoElement.remove();
                         videoElement = null;
@@ -95,11 +120,10 @@ export function SimpleVideoPlayer({
                 const onLoadedData = () => {
                     if (!isMounted || !videoElement) return;
                     try {
-                        // Ir a 0.5 segundos para un mejor thumbnail
                         videoElement.currentTime = Math.min(0.5, videoElement.duration * 0.1);
                     } catch (error) {
                         console.warn('Could not seek video for thumbnail:', error);
-                        onSeeked(); // Intentar capturar el frame actual
+                        onSeeked();
                     }
                 };
 
@@ -150,46 +174,43 @@ export function SimpleVideoPlayer({
                     }
                 };
 
-                const onError = (e: any) => {
+                const onVideoError = (e: any) => {
                     console.warn('Error loading video for thumbnail:', {
-                        src,
+                        src: videoSrc,
                         isMOVFile,
                         isMobile,
-                        error: e,
-                        videoElement: videoElement ? {
-                            readyState: videoElement.readyState,
-                            networkState: videoElement.networkState,
-                            error: videoElement.error
-                        } : null
+                        error: e
                     });
-
-                    // Para archivos MOV en móvil, intentar con configuración diferente
-                    if (isMOVFile && isMobile && videoElement) {
-                        console.log('Retrying MOV file with different configuration...');
-                        videoElement.load(); // Intentar recargar
-                    }
-
                     cleanup();
                     if (isMounted) {
                         setIsLoadingThumbnail(false);
                     }
                 };
 
+                timeoutId = setTimeout(() => {
+                    if (isMounted) {
+                        console.warn('Video thumbnail generation timeout:', videoSrc);
+                        setIsLoadingThumbnail(false);
+                        cleanup();
+                    }
+                }, isMOVFile && isMobile ? 20000 : 10000);
+
                 videoElement.addEventListener('loadeddata', onLoadedData);
                 videoElement.addEventListener('loadedmetadata', onLoadedMetadata);
-                videoElement.addEventListener('error', onError);
+                videoElement.addEventListener('error', onVideoError);
                 videoElement.addEventListener('seeked', onSeeked);
 
-                // Timeout de seguridad
-                setTimeout(() => {
-                    if (isMounted && videoElement) {
-                        cleanup();
-                        setIsLoadingThumbnail(false);
-                    }
-                }, 5000);
+                // Para MOV, intentar load manual
+                if (isMOVFile) {
+                    setTimeout(() => {
+                        if (videoElement && isMounted) {
+                            videoElement.load();
+                        }
+                    }, 100);
+                }
 
             } catch (error) {
-                console.warn('Error creating video element:', error);
+                console.error('Error creating video element:', error);
                 if (isMounted) {
                     setIsLoadingThumbnail(false);
                 }
@@ -204,12 +225,11 @@ export function SimpleVideoPlayer({
                 URL.revokeObjectURL(thumbnail);
             }
         };
-    }, [src]); // Removido thumbnail de las dependencias para evitar loops
+    }, [videoSrc, retryCount]);
 
     const handlePlayPause = () => {
         if (!showPlayer) {
             setShowPlayer(true);
-            // El video empezará a reproducirse automáticamente
             return;
         }
 
@@ -221,7 +241,7 @@ export function SimpleVideoPlayer({
         } else {
             video.play().catch((error) => {
                 console.error('Error playing video:', error);
-                onError?.(error);
+                handleVideoError(error);
             });
         }
     };
@@ -231,8 +251,9 @@ export function SimpleVideoPlayer({
             {/* Video element - solo visible cuando showPlayer es true */}
             {showPlayer && (
                 <video
+                    key={`video-${videoSrc}-${retryCount}`} // Force re-render on retry
                     ref={videoRef}
-                    src={src}
+                    src={videoSrc}
                     className="w-full h-full object-cover"
                     controls={true}
                     muted={muted}
@@ -244,9 +265,7 @@ export function SimpleVideoPlayer({
                     onPause={handleVideoPause}
                     onEnded={handleVideoEnded}
                     onError={handleVideoError}
-                    onLoadStart={() => console.log('Video load started:', src)}
-                    onCanPlay={() => console.log('Video can play:', src)}
-                    onLoadedData={() => console.log('Video loaded data:', src)}
+                    onLoadStart={() => console.log('Video load started:', videoSrc)}
                 />
             )}
 
@@ -265,32 +284,26 @@ export function SimpleVideoPlayer({
                             alt="Video thumbnail"
                         />
                     ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-slate-700 dark:via-slate-600 dark:to-slate-800 flex items-center justify-center">
-                            <svg className="w-12 h-12 text-white/60 dark:text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 002 2z" />
-                            </svg>
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-slate-700 dark:via-slate-600 dark:to-slate-800">
+                            <div className="text-gray-500 text-sm">
+                                {isMOVFile && isMobile ? 'MOV video (tap to play)' : 'Video no disponible'}
+                            </div>
                         </div>
                     )}
 
-                    {/* Overlay gradiente sutil */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent" />
-
-                    {/* Botón de play con glassmorphism */}
+                    {/* Play button overlay */}
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-16 h-16 bg-white/25 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:bg-white/35 transition-all duration-300 ease-out">
-                            <Play size={24} className="text-white ml-1 drop-shadow-lg" weight="fill" />
+                        <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 active:scale-95 transition-all duration-200 shadow-lg">
+                            <Play size={24} className="text-white ml-1" weight="fill" />
                         </div>
                     </div>
 
-                    {/* Duración en esquina inferior derecha */}
+                    {/* Duration badge */}
                     {showDuration && duration && (
-                        <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-full">
+                        <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-md">
                             {duration}
                         </div>
                     )}
-
-                    {/* Efecto hover */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
                 </div>
             )}
         </div>

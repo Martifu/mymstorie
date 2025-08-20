@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { CaretLeft, CaretRight } from 'phosphor-react';
 import { ImageViewer } from './ImageViewer';
-import { SimpleVideoPlayer } from './SimpleVideoPlayer';
+import { MOVCompatiblePlayer } from './MOVCompatiblePlayer';
 
 interface MediaItem {
     url: string;
@@ -124,14 +124,26 @@ export function MediaCarousel({ media, title, className = '' }: MediaCarouselPro
                                     loading={index === 0 ? "eager" : "lazy"}
                                 />
                             ) : (
-                                <SimpleVideoPlayer
+                                <MOVCompatiblePlayer
                                     src={item.url}
                                     className="h-full w-full"
                                     onError={(e: any) => {
-                                        console.error('Error loading video:', item.url, e);
+                                        console.error('Error loading video:', {
+                                            url: item.url,
+                                            index,
+                                            error: e,
+                                            userAgent: navigator.userAgent,
+                                            isSecondVideo: index > 0
+                                        });
+
+                                        // Si es un archivo .mov en móvil, mostrar mensaje específico
+                                        if (item.url.includes('.mov') && /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+                                            console.warn('MOV file detected on mobile device - may have compatibility issues');
+                                        }
                                     }}
                                     muted={true}
                                     showDuration={true}
+                                    key={`video-${index}-${item.url}`} // Force re-render for each video
                                 />
                             )}
                         </div>
