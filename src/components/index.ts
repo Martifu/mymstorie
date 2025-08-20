@@ -14,5 +14,10 @@ export * from './ImageViewer';
 export * from './AddMusicModal';
 export * from './SpotifyPlayer';
 export * from './VideoThumbnail';
+export * from './VideoPlayer';
+export * from './VideoPlayerLegacy';
+export * from './VideoCard';
+export * from './EntryVideoCard';
+export * from './SimpleVideoPlayer';
 
 

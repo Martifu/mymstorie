@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../features/auth/useAuth';
 import { ArrowLeft, CheckCircle, Calendar, ChatText, Image } from 'phosphor-react';
-import { SimpleImage, EntryOptionsMenu, VideoThumbnail } from '../../components';
+import { SimpleImage, EntryOptionsMenu, SimpleVideoPlayer } from '../../components';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -206,12 +206,14 @@ export default function GoalDetail() {
                             {media.map((item: any, index: number) => (
                                 <div key={item.id || index} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100">
                                     {item.type === 'video' ? (
-                                        <VideoThumbnail
+                                        <SimpleVideoPlayer
                                             src={item.url}
                                             className="w-full h-full"
                                             onError={(e) => {
                                                 console.error('Error loading video:', item.url, e);
                                             }}
+                                            muted={true}
+                                            showDuration={true}
                                         />
                                     ) : (
                                         <SimpleImage
