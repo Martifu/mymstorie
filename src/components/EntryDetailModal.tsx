@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Calendar } from 'phosphor-react';
 import { ArrowLeft } from 'iconsax-react';
@@ -17,6 +17,74 @@ interface EntryDetailModalProps {
     spaceId?: string;
     onClose: () => void;
     onDeleted?: () => void;
+}
+
+// Componente para video lazy loading en modal
+function LazyVideo({ src, className, onError }: { src: string; className?: string; onError?: (e: any) => void }) {
+    const [shouldLoad, setShouldLoad] = useState(false);
+    const [hasError, setHasError] = useState(false);
+    const videoRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setShouldLoad(true);
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (videoRef.current) {
+            observer.observe(videoRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, []);
+
+    const handleError = (e: any) => {
+        setHasError(true);
+        onError?.(e);
+    };
+
+    return (
+        <div ref={videoRef} className={className}>
+            {!shouldLoad ? (
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <div className="text-center text-gray-500">
+                        <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center mb-2">
+                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                            </svg>
+                        </div>
+                        <p className="text-xs">Cargando video...</p>
+                    </div>
+                </div>
+            ) : hasError ? (
+                <div className="w-full h-full bg-red-100 flex items-center justify-center">
+                    <div className="text-center text-red-500">
+                        <div className="w-12 h-12 bg-red-200 rounded-full flex items-center justify-center mb-2">
+                            <X size={20} />
+                        </div>
+                        <p className="text-xs">Error al cargar video</p>
+                    </div>
+                </div>
+            ) : (
+                <video
+                    src={src}
+                    className="w-full h-full object-cover"
+                    controls
+                    muted
+                    preload="metadata"
+                    playsInline
+                    onError={handleError}
+                    onLoadStart={() => console.log('🎬 Cargando video lazy en modal:', src)}
+                    onCanPlay={() => console.log('✅ Video lazy listo en modal:', src)}
+                />
+            )}
+        </div>
+    );
 }
 
 // Hook para obtener entry específica
@@ -260,13 +328,9 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
                                                             }}
                                                         />
                                                     ) : (
-                                                        <video
+                                                        <LazyVideo
                                                             src={item.url}
-                                                            className="w-full h-full object-cover"
-                                                            controls
-                                                            muted
-                                                            preload="metadata"
-                                                            playsInline
+                                                            className="w-full h-full"
                                                             onError={(e: any) => {
                                                                 console.error('❌ Error loading video:', {
                                                                     url: item.url,
@@ -277,9 +341,6 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
                                                                     userAgent: navigator.userAgent
                                                                 });
                                                             }}
-                                                            onLoadStart={() => console.log('🎬 Cargando video:', item.url)}
-                                                            onCanPlay={() => console.log('✅ Video listo:', item.url)}
-                                                            onLoadedData={() => console.log('📦 Video cargado:', item.url)}
                                                         />
                                                     )}
                                                 </div>

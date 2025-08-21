@@ -114,46 +114,72 @@ export function MediaCarousel({ media, title, className = '' }: MediaCarouselPro
                     className="flex h-full transition-transform duration-300 ease-out"
                     style={{ transform: `translateX(-${currentSlide * 100}%)` }}
                 >
-                    {allMedia.map((item, index) => (
-                        <div key={index} className="w-full h-full flex-shrink-0">
-                            {item.type === 'image' ? (
-                                <img
-                                    src={item.url}
-                                    alt={`${title} - imagen ${index + 1}`}
-                                    className="h-full w-full object-cover cursor-pointer"
-                                    style={{
-                                        minHeight: '100%',
-                                        minWidth: '100%',
-                                        objectFit: 'cover'
-                                    }}
-                                    onClick={() => openImageViewer(index)}
-                                    loading={index === 0 ? "eager" : "lazy"}
-                                />
-                            ) : (
-                                <video
-                                    src={item.url}
-                                    className="h-full w-full object-cover"
-                                    controls
-                                    muted
-                                    preload="metadata"
-                                    playsInline
-                                    style={{
-                                        minHeight: '100%',
-                                        minWidth: '100%',
-                                        objectFit: 'cover'
-                                    }}
-                                    onError={(e: any) => {
-                                        console.error('❌ Error cargando video en carrusel:', {
-                                            url: item.url,
-                                            index,
-                                            error: e.target?.error
-                                        });
-                                    }}
-                                    onLoadStart={() => console.log('🎬 Cargando video en carrusel:', item.url)}
-                                />
-                            )}
-                        </div>
-                    ))}
+                    {allMedia.map((item, index) => {
+                        // Solo cargar video si está visible (slide actual ± 1)
+                        const isCurrentSlide = index === currentSlide;
+                        const isAdjacentSlide = Math.abs(index - currentSlide) <= 1;
+                        const shouldLoadVideo = item.type === 'video' && isAdjacentSlide;
+
+                        return (
+                            <div key={index} className="w-full h-full flex-shrink-0">
+                                {item.type === 'image' ? (
+                                    <img
+                                        src={item.url}
+                                        alt={`${title} - imagen ${index + 1}`}
+                                        className="h-full w-full object-cover cursor-pointer"
+                                        style={{
+                                            minHeight: '100%',
+                                            minWidth: '100%',
+                                            objectFit: 'cover'
+                                        }}
+                                        onClick={() => openImageViewer(index)}
+                                        loading={index === 0 ? "eager" : "lazy"}
+                                    />
+                                ) : shouldLoadVideo ? (
+                                    <video
+                                        key={`video-${index}-${currentSlide}`} // Force re-render cuando cambia slide
+                                        src={item.url}
+                                        className="h-full w-full object-cover"
+                                        controls
+                                        muted
+                                        preload={isCurrentSlide ? "metadata" : "none"}
+                                        playsInline
+                                        style={{
+                                            minHeight: '100%',
+                                            minWidth: '100%',
+                                            objectFit: 'cover'
+                                        }}
+                                        onError={(e: any) => {
+                                            console.error('❌ Error cargando video en carrusel:', {
+                                                url: item.url,
+                                                index,
+                                                currentSlide,
+                                                error: e.target?.error,
+                                                networkState: e.target?.networkState,
+                                                readyState: e.target?.readyState
+                                            });
+                                        }}
+                                        onLoadStart={() => console.log('🎬 Cargando video en carrusel:', item.url, 'slide:', index)}
+                                        onCanPlay={() => console.log('✅ Video listo en carrusel:', item.url, 'slide:', index)}
+                                        onLoadedData={() => console.log('📦 Video cargado en carrusel:', item.url, 'slide:', index)}
+                                    />
+                                ) : (
+                                    // Placeholder para videos no cargados
+                                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                        <div className="text-center text-gray-500">
+                                            <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center mb-2">
+                                                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M8 5v14l11-7z" />
+                                                </svg>
+                                            </div>
+                                            <p className="text-sm">Video</p>
+                                            <p className="text-xs opacity-75">Desliza para cargar</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
 
                 {/* Navigation arrows - only show if multiple slides */}
