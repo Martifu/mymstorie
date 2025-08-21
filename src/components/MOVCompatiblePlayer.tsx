@@ -8,6 +8,7 @@ interface MOVCompatiblePlayerProps {
     autoPlay?: boolean;
     muted?: boolean;
     showDuration?: boolean;
+    isActive?: boolean; // Prop para controlar actividad en carrusel
 }
 
 export function MOVCompatiblePlayer({
@@ -16,7 +17,8 @@ export function MOVCompatiblePlayer({
     onError,
     autoPlay = false,
     muted = true,
-    showDuration = true
+    showDuration = true,
+    isActive = true // Por defecto true para compatibilidad con uso fuera del carrusel
 }: MOVCompatiblePlayerProps) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [showPlayer, setShowPlayer] = useState(autoPlay);
@@ -29,6 +31,19 @@ export function MOVCompatiblePlayer({
 
     const isMOVFile = src.toLowerCase().includes('.mov');
     const isMobile = /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+    // Gestionar el comportamiento según isActive
+    useEffect(() => {
+        if (!isActive) {
+            // Si el video no está activo, pausarlo y resetear el estado
+            const video = videoRef.current;
+            if (video && !video.paused) {
+                video.pause();
+            }
+            setIsPlaying(false);
+            // Mantener showPlayer para no perder el estado visual, pero pausar reproducción
+        }
+    }, [isActive]);
 
     // Event handlers
     const handleVideoPlay = () => setIsPlaying(true);
@@ -228,6 +243,12 @@ export function MOVCompatiblePlayer({
     }, [videoSrc, retryCount]);
 
     const handlePlayPause = () => {
+        // Solo permitir interacción si el video está activo
+        if (!isActive) {
+            console.log('Video MOV no activo, ignorando interacción');
+            return;
+        }
+
         if (!showPlayer) {
             setShowPlayer(true);
             return;

@@ -21,14 +21,36 @@ export function EntryCard({ entry, onClick }: { entry: Entry; onClick?: () => vo
 
   return (
     <article onClick={onClick} className="relative overflow-hidden rounded-xl shadow-soft cursor-pointer active:scale-pressed transition">
-      <div className="aspect-[4/5] bg-surface-muted">
+      <div className="aspect-[4/5] bg-surface-muted relative">
         {hasMedia ? (
-          <img
-            src={entry.media![0].url}
-            alt={entry.title}
-            className="h-full w-full object-cover"
-            loading="lazy"
-          />
+          <>
+            {entry.media![0].type === 'image' ? (
+              <img
+                src={entry.media![0].url}
+                alt={entry.title}
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <video
+                src={entry.media![0].url}
+                className="h-full w-full object-cover"
+                muted
+                preload="metadata"
+                playsInline
+              />
+            )}
+            {/* Indicador de video si el primer elemento es video */}
+            {entry.media![0].type === 'video' && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-gray-800 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <div className="h-full w-full flex items-center justify-center bg-gray-100">
             <div className="text-center text-gray-400">

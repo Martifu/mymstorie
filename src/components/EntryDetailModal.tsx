@@ -3,7 +3,9 @@ import { createPortal } from 'react-dom';
 import { X, Calendar } from 'phosphor-react';
 import { ArrowLeft } from 'iconsax-react';
 import { useAuth } from '../features/auth/useAuth';
-import { MediaCarousel, EntryOptionsMenu } from '../components';
+import { EntryOptionsMenu } from '../components';
+
+import { ImageViewer } from './ImageViewer';
 import { FloatingVinylPlayer } from './FloatingVinylPlayer';
 
 import birthdayIcon from '../assets/birthday-icon.svg';
@@ -110,6 +112,10 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
     const currentSpaceId = propSpaceId || authSpaceId;
     const { entry, loading, error } = useSpecificEntry(currentSpaceId, entryId);
 
+    // Image viewer state
+    const [showImageViewer, setShowImageViewer] = useState(false);
+    const [imageViewerIndex, setImageViewerIndex] = useState(0);
+
     // Prevenir scroll del body
     useEffect(() => {
         if (entryId) {
@@ -192,8 +198,7 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
                                 <ArrowLeft size={20} color="#3B3923" />
                             </button>
                             <div className="flex-1 min-w-0">
-                                <h1 className="font-semibold text-gray-900 truncate">{entry.title}</h1>
-                                <div className="flex items-center gap-2 mt-1">
+                                <div className="flex items-center gap-2">
                                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pill text-xs font-medium ${getEntryCategory(entry).bg} ${getEntryCategory(entry).color}`}>
                                         {getCategoryIcon(entry)}
                                         {getEntryCategory(entry).label}
@@ -218,16 +223,13 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
 
                         {/* Content */}
                         <div className="flex-1 overflow-y-auto">
-                            {/* Media Carousel */}
-                            {entry.media && entry.media.length > 0 && (
-                                <MediaCarousel
-                                    media={entry.media}
-                                    title={entry.title}
-                                />
-                            )}
+                            <div className="px-4 py-6 space-y-6">
+                                {/* Title */}
+                                <div>
+                                    <h1 className="text-2xl font-bold text-gray-900 mb-2">{entry.title}</h1>
+                                </div>
 
-                            <div className="px-4 pb-6 space-y-4">
-                                {/* Descripción */}
+                                {/* Description/Comments */}
                                 {entry.description && (
                                     <div className="bg-white rounded-2xl p-4 border shadow-sm">
                                         <h3 className="text-lg font-semibold mb-3 text-gray-900">Descripción</h3>
@@ -237,7 +239,56 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
                                     </div>
                                 )}
 
-                                {/* Fecha */}
+                                {/* Media Grid - Two columns for images and videos */}
+                                {entry.media && entry.media.length > 0 && (
+                                    <div className="bg-white rounded-2xl p-4 border shadow-sm">
+                                        <h3 className="text-lg font-semibold mb-4 text-gray-900">Media</h3>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {entry.media.map((item: any, index: number) => (
+                                                <div key={index} className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                                                    {item.type === 'image' ? (
+                                                        <img
+                                                            src={item.url}
+                                                            alt={`${entry.title} - imagen ${index + 1}`}
+                                                            className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-200"
+                                                            onClick={() => {
+                                                                // Open image viewer with all images
+                                                                const images = entry.media.filter((m: any) => m.type === 'image');
+                                                                const imageIndex = images.findIndex((img: any) => img.url === item.url);
+                                                                setImageViewerIndex(imageIndex);
+                                                                setShowImageViewer(true);
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <video
+                                                            src={item.url}
+                                                            className="w-full h-full object-cover"
+                                                            controls
+                                                            muted
+                                                            preload="metadata"
+                                                            playsInline
+                                                            onError={(e: any) => {
+                                                                console.error('❌ Error loading video:', {
+                                                                    url: item.url,
+                                                                    index,
+                                                                    error: e.target?.error,
+                                                                    networkState: e.target?.networkState,
+                                                                    readyState: e.target?.readyState,
+                                                                    userAgent: navigator.userAgent
+                                                                });
+                                                            }}
+                                                            onLoadStart={() => console.log('🎬 Cargando video:', item.url)}
+                                                            onCanPlay={() => console.log('✅ Video listo:', item.url)}
+                                                            onLoadedData={() => console.log('📦 Video cargado:', item.url)}
+                                                        />
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Date */}
                                 {entry.date && (
                                     <div className="bg-white rounded-2xl p-4 border shadow-sm">
                                         <div className="flex items-center gap-3">
@@ -257,10 +308,6 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
                                         </div>
                                     </div>
                                 )}
-
-
-
-
                             </div>
                         </div>
 
@@ -276,6 +323,15 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
                                 />
                             </div>
                         )}
+
+                        {/* Image Viewer Modal */}
+                        <ImageViewer
+                            images={entry.media?.filter((m: any) => m.type === 'image') || []}
+                            initialIndex={imageViewerIndex}
+                            isOpen={showImageViewer}
+                            onClose={() => setShowImageViewer(false)}
+                            title={entry.title}
+                        />
                     </>
                 )}
             </div>

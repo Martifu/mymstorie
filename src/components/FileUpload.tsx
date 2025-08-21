@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { Camera, Plus, X, Play } from 'phosphor-react';
+import { isMOVFile } from '../utils/fileUtils';
 
 interface FileWithPreview extends File {
     preview?: string;
@@ -22,24 +23,29 @@ export function FileUpload({
 }: FileUploadProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFiles = Array.from(event.target.files || []);
-        const newFiles: FileWithPreview[] = [];
+        const availableSlots = maxFiles - files.length;
 
-        selectedFiles.slice(0, maxFiles - files.length).forEach(file => {
+        for (const file of selectedFiles.slice(0, availableSlots)) {
             const fileWithPreview: FileWithPreview = file;
 
             // Crear preview para imágenes
-            if (file.type.startsWith('image/')) {
+            if (file.type?.startsWith('image/')) {
                 fileWithPreview.preview = URL.createObjectURL(file);
+                onChange([...files, fileWithPreview]);
             }
+            // Todos los videos se agregan directamente
+            else if (file.type?.startsWith('video/')) {
+                onChange([...files, fileWithPreview]);
+            }
+            // Otros archivos
+            else {
+                onChange([...files, fileWithPreview]);
+            }
+        }
 
-            newFiles.push(fileWithPreview);
-        });
-
-        onChange([...files, ...newFiles]);
-
-        // Reset input
+        // Limpiar input
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -47,11 +53,10 @@ export function FileUpload({
 
     const removeFile = (index: number) => {
         const fileToRemove = files[index];
-        if (fileToRemove.preview) {
+        if (fileToRemove?.preview) {
             URL.revokeObjectURL(fileToRemove.preview);
         }
-        const newFiles = files.filter((_, i) => i !== index);
-        onChange(newFiles);
+        onChange(files.filter((_, i) => i !== index));
     };
 
     return (
@@ -89,7 +94,7 @@ export function FileUpload({
 
             {files.length > 0 && (
                 <div className="mt-3 space-y-3">
-                    {/* Resumen de archivos */}
+                    {/* Resumen */}
                     <div className="p-3 bg-brand-blue/5 rounded-xl border border-brand-blue/20">
                         <div className="flex items-center gap-2 mb-2">
                             <div className="h-6 w-6 rounded-full bg-brand-blue/20 flex items-center justify-center">
@@ -100,28 +105,35 @@ export function FileUpload({
                             </div>
                         </div>
                         <div className="text-xs text-text-muted">
-                            {files.filter(f => f.type.startsWith('image/')).length} imágenes, {files.filter(f => f.type.startsWith('video/')).length} videos • {(files.reduce((acc, file) => acc + file.size, 0) / 1024 / 1024).toFixed(1)} MB total
+                            {files.filter(f => f.type?.startsWith('image/')).length} imágenes, {' '}
+                            {files.filter(f => f.type?.startsWith('video/')).length} videos • {' '}
+                            {(files.reduce((acc, file) => acc + file.size, 0) / 1024 / 1024).toFixed(1)} MB total
                         </div>
                     </div>
 
                     {/* Grid de previews */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {files.map((file, index) => (
-                            <div key={index} className="relative group">
+                            <div key={`${file.name}-${file.lastModified}-${index}`} className="relative group">
                                 <div className="aspect-square rounded-xl overflow-hidden bg-gray-100 border-2 border-gray-200">
-                                    {file.type.startsWith('image/') ? (
+                                    {file.type?.startsWith('image/') ? (
                                         <img
                                             src={file.preview}
                                             alt={file.name}
                                             className="w-full h-full object-cover"
                                         />
-                                    ) : file.type.startsWith('video/') ? (
-                                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                    ) : file.type?.startsWith('video/') ? (
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 relative">
                                             <div className="text-center">
                                                 <Play size={24} className="mx-auto mb-1 text-gray-500" weight="fill" />
                                                 <div className="text-xs text-gray-600 px-1 truncate">
                                                     {file.name}
                                                 </div>
+                                                {isMOVFile(file) && (
+                                                    <div className="text-xs text-blue-600 mt-1 font-medium">
+                                                        Se subirá como MP4
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ) : (
@@ -135,7 +147,7 @@ export function FileUpload({
                                     )}
                                 </div>
 
-                                {/* Botón de eliminar */}
+                                {/* Botón eliminar */}
                                 <button
                                     type="button"
                                     onClick={() => removeFile(index)}
@@ -145,9 +157,9 @@ export function FileUpload({
                                     <X size={12} weight="bold" />
                                 </button>
 
-                                {/* Barra de progreso durante subida */}
+                                {/* Progreso de subida */}
                                 {isUploading && uploadProgress[file.name] !== undefined && (
-                                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-1 rounded-b-xl">
+                                    <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-1 rounded-b-xl">
                                         <div className="flex items-center gap-2">
                                             <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
                                                 <div

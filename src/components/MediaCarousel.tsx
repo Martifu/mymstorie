@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { CaretLeft, CaretRight } from 'phosphor-react';
 import { ImageViewer } from './ImageViewer';
-import { MOVCompatiblePlayer } from './MOVCompatiblePlayer';
 
 interface MediaItem {
     url: string;
@@ -22,10 +21,13 @@ export function MediaCarousel({ media, title, className = '' }: MediaCarouselPro
     const touchStartX = useRef<number | null>(null);
     const touchEndX = useRef<number | null>(null);
 
-    if (!media || media.length === 0) return null;
+    // Show all media (images and videos) in the carousel
+    const allMedia = media || [];
+
+    if (!allMedia || allMedia.length === 0) return null;
 
     const goToSlide = (slideIndex: number) => {
-        if (slideIndex < 0 || slideIndex >= media.length || isTransitioning) return;
+        if (slideIndex < 0 || slideIndex >= allMedia.length || isTransitioning) return;
 
         setIsTransitioning(true);
         setCurrentSlide(slideIndex);
@@ -36,12 +38,12 @@ export function MediaCarousel({ media, title, className = '' }: MediaCarouselPro
     };
 
     const nextSlide = () => {
-        const next = currentSlide === media.length - 1 ? 0 : currentSlide + 1;
+        const next = currentSlide === allMedia.length - 1 ? 0 : currentSlide + 1;
         goToSlide(next);
     };
 
     const prevSlide = () => {
-        const prev = currentSlide === 0 ? media.length - 1 : currentSlide - 1;
+        const prev = currentSlide === 0 ? allMedia.length - 1 : currentSlide - 1;
         goToSlide(prev);
     };
 
@@ -86,13 +88,17 @@ export function MediaCarousel({ media, title, className = '' }: MediaCarouselPro
     }, [currentSlide]);
 
     const openImageViewer = (index: number) => {
-        if (media[index].type === 'image') {
-            setImageViewerIndex(index);
+        // Solo abrir visor para imágenes
+        if (allMedia[index].type === 'image') {
+            // Encontrar el índice correcto en las imágenes solamente
+            const imageOnlyMedia = allMedia.filter(item => item.type === 'image');
+            const imageIndex = imageOnlyMedia.findIndex(img => img.url === allMedia[index].url);
+            setImageViewerIndex(imageIndex);
             setShowImageViewer(true);
         }
     };
 
-    const hasMultipleSlides = media.length > 1;
+    const hasMultipleSlides = allMedia.length > 1;
 
     return (
         <div className={`relative mx-3 mt-4 mb-6 ${className}`}>
@@ -108,7 +114,7 @@ export function MediaCarousel({ media, title, className = '' }: MediaCarouselPro
                     className="flex h-full transition-transform duration-300 ease-out"
                     style={{ transform: `translateX(-${currentSlide * 100}%)` }}
                 >
-                    {media.map((item, index) => (
+                    {allMedia.map((item, index) => (
                         <div key={index} className="w-full h-full flex-shrink-0">
                             {item.type === 'image' ? (
                                 <img
@@ -124,26 +130,26 @@ export function MediaCarousel({ media, title, className = '' }: MediaCarouselPro
                                     loading={index === 0 ? "eager" : "lazy"}
                                 />
                             ) : (
-                                <MOVCompatiblePlayer
+                                <video
                                     src={item.url}
-                                    className="h-full w-full"
+                                    className="h-full w-full object-cover"
+                                    controls
+                                    muted
+                                    preload="metadata"
+                                    playsInline
+                                    style={{
+                                        minHeight: '100%',
+                                        minWidth: '100%',
+                                        objectFit: 'cover'
+                                    }}
                                     onError={(e: any) => {
-                                        console.error('Error loading video:', {
+                                        console.error('❌ Error cargando video en carrusel:', {
                                             url: item.url,
                                             index,
-                                            error: e,
-                                            userAgent: navigator.userAgent,
-                                            isSecondVideo: index > 0
+                                            error: e.target?.error
                                         });
-
-                                        // Si es un archivo .mov en móvil, mostrar mensaje específico
-                                        if (item.url.includes('.mov') && /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent)) {
-                                            console.warn('MOV file detected on mobile device - may have compatibility issues');
-                                        }
                                     }}
-                                    muted={true}
-                                    showDuration={true}
-                                    key={`video-${index}-${item.url}`} // Force re-render for each video
+                                    onLoadStart={() => console.log('🎬 Cargando video en carrusel:', item.url)}
                                 />
                             )}
                         </div>
@@ -176,7 +182,7 @@ export function MediaCarousel({ media, title, className = '' }: MediaCarouselPro
                 {/* Slide counter */}
                 {hasMultipleSlides && (
                     <div className="absolute top-3 right-3 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-pill text-white text-xs font-medium">
-                        {currentSlide + 1} / {media.length}
+                        {currentSlide + 1} / {allMedia.length}
                     </div>
                 )}
             </div>
@@ -184,7 +190,7 @@ export function MediaCarousel({ media, title, className = '' }: MediaCarouselPro
             {/* Dots indicator - only show if multiple slides */}
             {hasMultipleSlides && (
                 <div className="flex justify-center mt-3 space-x-1">
-                    {media.map((_, index) => (
+                    {allMedia.map((_, index) => (
                         <button
                             key={index}
                             onClick={() => goToSlide(index)}
@@ -201,7 +207,7 @@ export function MediaCarousel({ media, title, className = '' }: MediaCarouselPro
 
             {/* Image Viewer Modal */}
             <ImageViewer
-                images={media}
+                images={allMedia.filter(item => item.type === 'image')}
                 initialIndex={imageViewerIndex}
                 isOpen={showImageViewer}
                 onClose={() => setShowImageViewer(false)}

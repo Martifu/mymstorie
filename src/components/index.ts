@@ -19,6 +19,7 @@ export * from './VideoPlayerLegacy';
 export * from './VideoCard';
 export * from './EntryVideoCard';
 export * from './SimpleVideoPlayer';
+export * from './BasicVideoPlayer';
 export * from './MOVCompatiblePlayer';
 export * from './VideoCompatibilityChecker';
 export * from './SimpleVideoPlayer';

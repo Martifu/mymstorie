@@ -11,6 +11,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "@types/video.js": "^7.3.58",
     "browser-image-compression": "^2.0.2",
     "clsx": "^2.1.1",

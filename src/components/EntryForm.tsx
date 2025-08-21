@@ -3,6 +3,7 @@ import { useState } from 'react';
 import imageCompression from 'browser-image-compression';
 import { FileUpload } from './FileUpload';
 import { SpotifySearch } from './SpotifySearch';
+import { processFileForUpload } from '../utils/fileUtils';
 import type { EntrySpotifyData } from '../features/spotify/spotifyService';
 
 interface FileWithPreview extends File {
@@ -33,11 +34,27 @@ export function EntryForm({ onSubmit, initialTitle = '' }: { onSubmit: (data: Fo
         if (values.description) fd.append('description', values.description);
         if (values.tags) fd.append('tags', values.tags);
 
-        // Procesar archivos seleccionados
-        for (const f of files.slice(0, 10)) {
-            const isImage = f.type.startsWith('image/');
-            const fileToUpload = isImage ? await compress(f) : f;
-            fd.append('media', fileToUpload, f.name);
+        // Procesar archivos seleccionados (máximo 10)
+        for (const originalFile of files.slice(0, 10)) {
+            let fileToUpload = originalFile;
+            let fileName = originalFile.name;
+
+            if (originalFile.type.startsWith('image/')) {
+                // Comprimir imágenes para optimizar tamaño
+                fileToUpload = await compress(originalFile);
+                fileName = originalFile.name; // Mantener nombre original para imágenes
+            } else if (originalFile.type.startsWith('video/')) {
+                // Procesar videos (renombrar MOV a MP4 si es necesario)
+                const processed = processFileForUpload(originalFile);
+                fileToUpload = processed.file;
+                fileName = processed.file.name; // Usar nombre procesado (MOV → MP4)
+
+                if (processed.wasRenamed) {
+                    console.log(`✅ Video procesado para subida: ${originalFile.name} → ${fileName}`);
+                }
+            }
+
+            fd.append('media', fileToUpload, fileName);
         }
 
         await onSubmit(fd, (fileName, progress) => {

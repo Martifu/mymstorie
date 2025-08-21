@@ -186,7 +186,8 @@ export function FeedPost({ entry, onClick, onOptionsClick }: FeedPostProps) {
                             />
                             {/* Indicador de múltiples fotos */}
                             <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-medium px-2 py-1 rounded-full">
-                                {entry.media!.length} fotos
+                                {entry.media!.filter(m => m.type === 'image').length} fotos
+                                {entry.media!.some(m => m.type === 'video') && ` + ${entry.media!.filter(m => m.type === 'video').length} videos`}
                             </div>
                         </div>
                     ) : (
