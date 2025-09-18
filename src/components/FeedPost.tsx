@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { DotsThree, MusicNote } from 'phosphor-react';
-import { MediaCarousel, SimpleImage } from './';
+import { SimpleImage } from './';
 import { useUserProfile } from '../hooks/useUserProfile';
 
 type Media = {
@@ -35,18 +33,17 @@ type FeedEntry = {
 interface FeedPostProps {
     entry: FeedEntry;
     onClick?: () => void;
-    onOptionsClick?: () => void;
 }
 
-export function FeedPost({ entry, onClick, onOptionsClick }: FeedPostProps) {
-    const [showFullDescription, setShowFullDescription] = useState(false);
+export function FeedPost({ entry, onClick }: FeedPostProps) {
 
     // Obtener perfil del usuario creador
     const { profile: creatorProfile, loading: creatorLoading } = useUserProfile(entry.createdBy);
 
-    const hasMedia = entry.media && entry.media.length > 0;
-    const hasMultipleMedia = hasMedia && entry.media!.length > 1;
     const hasSpotify = !!entry.spotify;
+
+    // Buscar la primera imagen para usar como thumbnail
+    const thumbnailImage = entry.media?.find(item => item.type === 'image');
 
     // Formatear tiempo relativo
     const getTimeAgo = () => {
@@ -73,167 +70,106 @@ export function FeedPost({ entry, onClick, onOptionsClick }: FeedPostProps) {
     const userName = creatorProfile?.displayName || 'Familia';
     const userAvatar = creatorProfile?.photoURL;
 
-    // Truncar descripción si es muy larga
-    const maxDescriptionLength = 150;
-    const shouldTruncateDescription = entry.description && entry.description.length > maxDescriptionLength;
-    const displayDescription = shouldTruncateDescription && !showFullDescription
-        ? entry.description?.slice(0, maxDescriptionLength) + '...'
-        : entry.description;
+
+
 
     return (
-        <article className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            {/* Header del post - Clickeable */}
-            <div
-                className="flex items-center justify-between p-4 pb-3 cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={onClick}
-            >
-                <div className="flex items-center gap-3">
-                    {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center overflow-hidden">
-                        {creatorLoading ? (
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                            <SimpleImage
-                                src={userAvatar}
-                                alt={userName}
-                                className="w-full h-full object-cover"
-                                fallback={
-                                    <span className="text-white font-bold text-sm">
-                                        {userName.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)}
-                                    </span>
-                                }
-                            />
-                        )}
-                    </div>
+        <article
+            className="relative overflow-hidden rounded-3xl shadow-xl cursor-pointer group transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]"
+            onClick={onClick}
+        >
+            {/* Fondo de imagen */}
+            {thumbnailImage ? (
+                <div className="aspect-[4/5] relative">
+                    <SimpleImage
+                        src={thumbnailImage.url}
+                        alt={entry.title}
+                        className="w-full h-full object-cover"
+                        fallback={
+                            <div className="w-full h-full bg-gradient-to-br from-purple-500 via-pink-500 to-red-500" />
+                        }
+                    />
 
-                    {/* Info del usuario */}
-                    <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-gray-900 text-sm">{userName}</h3>
-                            <span className={`${typeInfo.color} text-xs font-medium flex items-center gap-1`}>
-                                {typeInfo.emoji} {typeInfo.label}
-                            </span>
-                        </div>
-                        <p className="text-xs text-gray-500">{getTimeAgo()}</p>
-                    </div>
+                    {/* Overlay gradient para legibilidad */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
                 </div>
+            ) : (
+                <div className="aspect-[4/5] bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 relative">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                </div>
+            )}
 
-                {/* Opciones */}
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onOptionsClick?.();
-                    }}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                    <DotsThree size={16} className="text-gray-500" />
-                </button>
+            {/* Header flotante con avatar y opciones */}
+            <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/50 to-transparent">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        {/* Avatar */}
+                        <div className="w-10 h-10 rounded-full bg-white shadow-lg border-2 border-white/50 flex items-center justify-center overflow-hidden">
+                            {creatorLoading ? (
+                                <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <SimpleImage
+                                    src={userAvatar}
+                                    alt={userName}
+                                    className="w-full h-full object-cover"
+                                    priority={true}
+                                    fallback={
+                                        <span className="text-gray-700 font-bold text-xs">
+                                            {userName.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)}
+                                        </span>
+                                    }
+                                />
+                            )}
+                        </div>
+
+                        {/* Info del usuario */}
+                        <div>
+                            <h3 className="text-white font-semibold text-sm drop-shadow-lg">{userName}</h3>
+                            <p className="text-white/80 text-xs drop-shadow-lg">{getTimeAgo()}</p>
+                        </div>
+                    </div>
+
+                    {/* Opciones */}
+
+                </div>
             </div>
 
-            {/* Contenido del post */}
-            <div className="px-4 pb-3">
+            {/* Indicadores superiores */}
+            <div className="absolute top-4 right-4 flex items-center gap-2">
+                {/* Tipo de entrada */}
+                <div className="px-2 py-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full">
+                    <span className="text-white text-xs font-medium flex items-center gap-1">
+                        {typeInfo.emoji} {typeInfo.label}
+                    </span>
+                </div>
+            </div>
+
+
+            {/* Contenido inferior superpuesto */}
+            <div className="absolute inset-x-0 bottom-0 p-6">
                 {/* Título */}
-                <h4 className="font-semibold text-gray-900 mb-2 leading-tight">
+                <h4 className="text-white font-bold text-lg mb-2 leading-tight drop-shadow-lg line-clamp-2">
                     {entry.title}
                 </h4>
 
                 {/* Descripción */}
                 {entry.description && (
-                    <div className="text-gray-700 text-sm leading-relaxed">
-                        <p className="whitespace-pre-wrap">{displayDescription}</p>
-                        {shouldTruncateDescription && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowFullDescription(!showFullDescription);
-                                }}
-                                className="text-purple-600 font-medium text-sm mt-1 hover:text-purple-700"
-                            >
-                                {showFullDescription ? 'Ver menos' : 'Ver más'}
-                            </button>
-                        )}
+                    <div className="text-white/90 text-sm leading-relaxed drop-shadow-lg">
+                        <p className="line-clamp-2">{entry.description}</p>
                     </div>
                 )}
 
-                {/* Indicador de música */}
+                {/* Indicador de música en texto */}
                 {hasSpotify && (
-                    <div className="flex items-center gap-2 mt-3 p-2 bg-green-50 rounded-lg">
-                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                            <MusicNote size={12} className="text-white" weight="fill" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-green-800 font-medium text-xs truncate">
-                                {entry.spotify?.name}
-                            </p>
-                            <p className="text-green-600 text-xs truncate">
-                                {entry.spotify?.artists}
-                            </p>
-                        </div>
-                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                    <div className="flex items-center gap-2 mt-3">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                        <p className="text-green-400 text-xs font-medium truncate drop-shadow-lg">
+                            {entry.spotify?.name} • {entry.spotify?.artists}
+                        </p>
                     </div>
                 )}
             </div>
-
-            {/* Media - Foto/Video/Carrusel */}
-            {hasMedia && (
-                <div className="relative">
-                    {hasMultipleMedia ? (
-                        <div className="relative">
-                            <MediaCarousel
-                                media={entry.media!}
-                                title={entry.title}
-                                className="aspect-[16/10]"
-                            />
-                            {/* Indicador de múltiples fotos */}
-                            <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-medium px-2 py-1 rounded-full">
-                                {entry.media!.filter(m => m.type === 'image').length} fotos
-                                {entry.media!.some(m => m.type === 'video') && ` + ${entry.media!.filter(m => m.type === 'video').length} videos`}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="aspect-[16/10] bg-gray-100">
-                            {entry.media![0].type === 'image' ? (
-                                <SimpleImage
-                                    src={entry.media![0].url}
-                                    alt={entry.title}
-                                    className="w-full h-full object-cover"
-                                    fallback={
-                                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                            <div className="text-center">
-                                                <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                                <p className="text-xs">Imagen no disponible</p>
-                                            </div>
-                                        </div>
-                                    }
-                                />
-                            ) : (
-                                <video
-                                    src={entry.media![0].url}
-                                    className="w-full h-full object-cover"
-                                    controls
-                                    muted
-                                    preload="metadata"
-                                    playsInline
-                                    onError={(e: any) => {
-                                        console.error('❌ Error cargando video único en feed:', {
-                                            url: entry.media![0].url,
-                                            error: e.target?.error,
-                                            networkState: e.target?.networkState,
-                                            readyState: e.target?.readyState
-                                        });
-                                    }}
-                                    onLoadStart={() => console.log('🎬 Cargando video único en feed:', entry.media![0].url)}
-                                    onCanPlay={() => console.log('✅ Video único listo en feed:', entry.media![0].url)}
-                                />
-                            )}
-                        </div>
-                    )}
-                </div>
-            )}
-
-
         </article>
     );
 }

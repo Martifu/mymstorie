@@ -27,23 +27,33 @@ export function FileUpload({
         const selectedFiles = Array.from(event.target.files || []);
         const availableSlots = maxFiles - files.length;
 
+        // Contar videos existentes
+        const existingVideos = files.filter(f => f.type?.startsWith('video/')).length;
+        let newFiles = [...files];
+
         for (const file of selectedFiles.slice(0, availableSlots)) {
             const fileWithPreview: FileWithPreview = file;
 
-            // Crear preview para imágenes
-            if (file.type?.startsWith('image/')) {
-                fileWithPreview.preview = URL.createObjectURL(file);
-                onChange([...files, fileWithPreview]);
+            // Validar que solo se pueda agregar un video
+            if (file.type?.startsWith('video/')) {
+                if (existingVideos > 0) {
+                    alert('Solo se permite un video por entrada. Si quieres agregar este video, elimina el anterior primero.');
+                    continue;
+                }
+                newFiles.push(fileWithPreview);
             }
-            // Todos los videos se agregan directamente
-            else if (file.type?.startsWith('video/')) {
-                onChange([...files, fileWithPreview]);
+            // Crear preview para imágenes
+            else if (file.type?.startsWith('image/')) {
+                fileWithPreview.preview = URL.createObjectURL(file);
+                newFiles.push(fileWithPreview);
             }
             // Otros archivos
             else {
-                onChange([...files, fileWithPreview]);
+                newFiles.push(fileWithPreview);
             }
         }
+
+        onChange(newFiles);
 
         // Limpiar input
         if (fileInputRef.current) {
@@ -82,10 +92,10 @@ export function FileUpload({
                     </div>
                     <div className="text-left">
                         <div className="text-sm font-medium text-brand-blue">
-                            {files.length === 0 ? 'Agregar fotos o videos' : 'Agregar más archivos'}
+                            {files.length === 0 ? 'Agregar fotos y video' : 'Agregar más archivos'}
                         </div>
                         <div className="text-xs text-text-muted">
-                            {files.length}/{maxFiles} archivos
+                            {files.length}/{maxFiles} archivos • Máximo 1 video
                         </div>
                     </div>
                 </div>
@@ -105,8 +115,8 @@ export function FileUpload({
                             </div>
                         </div>
                         <div className="text-xs text-text-muted">
-                            {files.filter(f => f.type?.startsWith('image/')).length} imágenes, {' '}
-                            {files.filter(f => f.type?.startsWith('video/')).length} videos • {' '}
+                            {files.filter(f => f.type?.startsWith('image/')).length} imágenes
+                            {files.filter(f => f.type?.startsWith('video/')).length > 0 && `, 1 video`} • {' '}
                             {(files.reduce((acc, file) => acc + file.size, 0) / 1024 / 1024).toFixed(1)} MB total
                         </div>
                     </div>

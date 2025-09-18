@@ -180,10 +180,6 @@ export function Home() {
                                         setSelectedEntryId(entry.id);
                                     }
                                 }}
-                                onOptionsClick={() => {
-                                    // TODO: Implementar menú de opciones
-                                    console.log('Opciones para:', entry.id);
-                                }}
                             />
                         ))}
                     </div>

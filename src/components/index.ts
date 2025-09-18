@@ -23,5 +23,7 @@ export * from './BasicVideoPlayer';
 export * from './MOVCompatiblePlayer';
 export * from './VideoCompatibilityChecker';
 export * from './SimpleVideoPlayer';
+export * from './ZoomableImage';
+export * from './EditEntryModal';
 
 

@@ -7,6 +7,8 @@ import { EntryOptionsMenu } from '../components';
 
 import { ImageViewer } from './ImageViewer';
 import { FloatingVinylPlayer } from './FloatingVinylPlayer';
+import { ZoomableImage } from './ZoomableImage';
+import { EditEntryModal } from './EditEntryModal';
 
 import birthdayIcon from '../assets/birthday-icon.svg';
 import milestoneIcon from '../assets/milestone-icon.svg';
@@ -19,7 +21,7 @@ interface EntryDetailModalProps {
     onDeleted?: () => void;
 }
 
-// Componente para video lazy loading en modal
+// Componente para video lazy loading en modal con controles centrados
 function LazyVideo({ src, className, onError }: { src: string; className?: string; onError?: (e: any) => void }) {
     const [shouldLoad, setShouldLoad] = useState(false);
     const [hasError, setHasError] = useState(false);
@@ -182,7 +184,21 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
 
     // Image viewer state
     const [showImageViewer, setShowImageViewer] = useState(false);
-    const [imageViewerIndex, setImageViewerIndex] = useState(0);
+    const [imageViewerIndex] = useState(0);
+
+    // Media navigation state
+    const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+
+    // Auto-hide controls state
+    const [showControls, setShowControls] = useState(true);
+    const [hideTimeout, setHideTimeout] = useState<NodeJS.Timeout | null>(null);
+
+    // Touch/Slide gestures state
+    const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
+    const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
+
+    // Edit modal state
+    const [showEditModal, setShowEditModal] = useState(false);
 
     // Prevenir scroll del body
     useEffect(() => {
@@ -211,9 +227,126 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
         }
     }, [entryId, onClose]);
 
+    // Auto-hide controls after 3 seconds
+    const resetHideTimer = () => {
+        if (hideTimeout) {
+            clearTimeout(hideTimeout);
+        }
+
+        setShowControls(true);
+
+        const newTimeout = setTimeout(() => {
+            setShowControls(false);
+        }, 5000);
+
+        setHideTimeout(newTimeout);
+    };
+
+    // Initialize auto-hide timer
+    useEffect(() => {
+        if (entryId) {
+            resetHideTimer();
+        }
+
+        return () => {
+            if (hideTimeout) {
+                clearTimeout(hideTimeout);
+            }
+        };
+    }, [entryId]);
+
+    // Toggle controls visibility
+    const toggleControls = () => {
+        if (showControls) {
+            setShowControls(false);
+            if (hideTimeout) {
+                clearTimeout(hideTimeout);
+                setHideTimeout(null);
+            }
+        } else {
+            resetHideTimer();
+        }
+    };
+
+    // Handle touch gestures for slide navigation
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setTouchEnd(null);
+        setTouchStart({
+            x: e.targetTouches[0].clientX,
+            y: e.targetTouches[0].clientY
+        });
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        setTouchEnd({
+            x: e.targetTouches[0].clientX,
+            y: e.targetTouches[0].clientY
+        });
+    };
+
+    // Funciones de navegación de media
+    const goToNextMedia = () => {
+        if (entry?.media && entry.media.length > 1) {
+            setCurrentMediaIndex((prev) => (prev + 1) % entry.media.length);
+            resetHideTimer();
+        }
+    };
+
+    const goToPrevMedia = () => {
+        if (entry?.media && entry.media.length > 1) {
+            setCurrentMediaIndex((prev) => (prev - 1 + entry.media.length) % entry.media.length);
+            resetHideTimer();
+        }
+    };
+
+    const handleTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+
+        const distanceX = touchStart.x - touchEnd.x;
+        const distanceY = touchStart.y - touchEnd.y;
+        const minSwipeDistance = 50;
+
+        // Solo procesar swipes horizontales (más horizontales que verticales)
+        if (Math.abs(distanceX) > Math.abs(distanceY) && Math.abs(distanceX) > minSwipeDistance) {
+            if (distanceX > 0) {
+                // Swipe left - siguiente
+                goToNextMedia();
+            } else {
+                // Swipe right - anterior
+                goToPrevMedia();
+            }
+        }
+
+        setTouchStart(null);
+        setTouchEnd(null);
+    };
+
     if (!entryId) return null;
 
     const modalContent = (
+        <>
+            {/* Agregar estilos CSS para animaciones */}
+            <style>
+                {`
+                    @keyframes fadeIn {
+                        from {
+                            opacity: 0;
+                        }
+                        to {
+                            opacity: 1;
+                        }
+                    }
+                    
+                    @keyframes fadeOut {
+                        from {
+                            opacity: 1;
+                        }
+                        to {
+                            opacity: 0;
+                        }
+                    }
+                `}
+            </style>
         <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-0 z-[100000]"
             style={{ zIndex: 100000 }}
@@ -255,26 +388,134 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
                     </div>
                 )}
 
-                {entry && (
-                    <>
-                        {/* Header */}
-                        <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+                    {entry && (() => {
+                        // Obtener todas las medias disponibles
+                        const allMedia = entry.media || [];
+                        const hasMedia = allMedia.length > 0;
+                        const hasMultipleMedia = allMedia.length > 1;
+
+                        // Media actual basada en el índice
+                        const currentMedia = hasMedia ? allMedia[currentMediaIndex] : null;
+
+
+                        return (
+                            <>
+                                {/* Netflix-style Layout - Media como fondo con overlay */}
+                                <div
+                                    className="relative w-full h-full overflow-hidden cursor-pointer"
+                                    onClick={toggleControls}
+                                    onTouchStart={handleTouchStart}
+                                    onTouchMove={handleTouchMove}
+                                    onTouchEnd={handleTouchEnd}
+                                >
+                                    {/* Fondo de media (imagen o video) */}
+                                    {currentMedia ? (
+                                        <div className="absolute inset-0">
+                                            {currentMedia.type === 'image' ? (
+                                                <ZoomableImage
+                                                    src={currentMedia.url}
+                                                    alt={entry.title}
+                                                    className="w-full h-full"
+                                                />
+                                            ) : (
+                                                <div className="relative w-full h-full">
+                                                    <LazyVideo
+                                                        src={currentMedia.url}
+                                                        className="w-full h-full"
+                                                        onError={(e: any) => {
+                                                            console.error('❌ Error loading video:', {
+                                                                url: currentMedia.url,
+                                                                error: e.target?.error,
+                                                                networkState: e.target?.networkState,
+                                                                readyState: e.target?.readyState,
+                                                                userAgent: navigator.userAgent
+                                                            });
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        // Fondo de degradado si no hay media
+                                        <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900" />
+                                    )}
+
+                                    {/* Ícono de mostrar controles cuando están ocultos */}
+                                    {!showControls && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                resetHideTimer();
+                                            }}
+                                            className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-all opacity-0 animate-fade-in"
+                                            style={{ animation: 'fadeIn 0.3s ease-in-out forwards' }}
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                        </button>
+                                    )}
+
+                                    {/* Controles de navegación de media - Solo si hay múltiples medias y controles visibles */}
+                                    {hasMultipleMedia && showControls && (
+                                        <div
+                                            className="opacity-0 animate-fade-in"
+                                            style={{ animation: 'fadeIn 0.3s ease-in-out forwards' }}
+                                        >
+                                            {/* Botón anterior */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    goToPrevMedia();
+                                                }}
+                                                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-all"
+                                            >
+                                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                                                </svg>
+                                            </button>
+
+                                            {/* Botón siguiente */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    goToNextMedia();
+                                                }}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-all"
+                                            >
+                                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    )}
+
+
+                                    {/* Header flotante con controles - Siempre visible el botón de atrás */}
+                                    <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/50 to-transparent">
+                                        <div className="flex items-center justify-between">
                             <button
-                                onClick={onClose}
-                                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition"
-                            >
-                                <ArrowLeft size={20} color="#3B3923" />
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onClose();
+                                                }}
+                                                className="p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-all"
+                                            >
+                                                <ArrowLeft size={20} color="white" />
                             </button>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pill text-xs font-medium ${getEntryCategory(entry).bg} ${getEntryCategory(entry).color}`}>
+
+                                            {showControls && (
+                                                <div
+                                                    className="flex items-center gap-3 opacity-0 animate-fade-in"
+                                                    style={{ animation: 'fadeIn 0.3s ease-in-out forwards' }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm text-white border border-white/30`}>
                                         {getCategoryIcon(entry)}
                                         {getEntryCategory(entry).label}
                                     </span>
-                                </div>
-                            </div>
 
-                            {/* Menú de opciones */}
                             <EntryOptionsMenu
                                 entryId={entryId}
                                 entryType={entry.type}
@@ -286,77 +527,35 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
                                     onDeleted?.();
                                     onClose();
                                 }}
-                            />
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 overflow-y-auto">
-                            <div className="px-4 py-6 space-y-6">
-                                {/* Title */}
-                                <div>
-                                    <h1 className="text-2xl font-bold text-gray-900 mb-2">{entry.title}</h1>
-                                </div>
-
-                                {/* Description/Comments */}
-                                {entry.description && (
-                                    <div className="bg-white rounded-2xl p-4 border shadow-sm">
-                                        <h3 className="text-lg font-semibold mb-3 text-gray-900">Descripción</h3>
-                                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                                            {entry.description}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Media Grid - Two columns for images and videos */}
-                                {entry.media && entry.media.length > 0 && (
-                                    <div className="bg-white rounded-2xl p-4 border shadow-sm">
-                                        <h3 className="text-lg font-semibold mb-4 text-gray-900">Media</h3>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {entry.media.map((item: any, index: number) => (
-                                                <div key={index} className="aspect-square rounded-lg overflow-hidden bg-gray-100">
-                                                    {item.type === 'image' ? (
-                                                        <img
-                                                            src={item.url}
-                                                            alt={`${entry.title} - imagen ${index + 1}`}
-                                                            className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-200"
-                                                            onClick={() => {
-                                                                // Open image viewer with all images
-                                                                const images = entry.media.filter((m: any) => m.type === 'image');
-                                                                const imageIndex = images.findIndex((img: any) => img.url === item.url);
-                                                                setImageViewerIndex(imageIndex);
-                                                                setShowImageViewer(true);
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <LazyVideo
-                                                            src={item.url}
-                                                            className="w-full h-full"
-                                                            onError={(e: any) => {
-                                                                console.error('❌ Error loading video:', {
-                                                                    url: item.url,
-                                                                    index,
-                                                                    error: e.target?.error,
-                                                                    networkState: e.target?.networkState,
-                                                                    readyState: e.target?.readyState,
-                                                                    userAgent: navigator.userAgent
-                                                                });
-                                                            }}
-                                                        />
-                                                    )}
+                                                        onEdit={() => setShowEditModal(true)}
+                                                    />
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     </div>
-                                )}
 
-                                {/* Date */}
+                                    {/* Contenido principal superpuesto en la parte inferior - Solo visible cuando showControls */}
+                                    {showControls && (
+                                        <div
+                                            className="absolute inset-x-0 bottom-0 z-30 pointer-events-none opacity-0 animate-fade-in"
+                                            style={{ animation: 'fadeIn 0.3s ease-in-out forwards' }}
+                                        >
+                                            {/* Overlay negro específico para el texto */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 via-black/40 to-transparent" />
+
+                                            <div className="relative p-6 pb-20 space-y-4 pointer-events-auto">
+                                                {/* Título principal */}
+                                                <div>
+                                                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 drop-shadow-lg">
+                                                        {entry.title}
+                                                    </h1>
+                                                </div>
+
+                                                {/* Fecha */}
                                 {entry.date && (
-                                    <div className="bg-white rounded-2xl p-4 border shadow-sm">
-                                        <div className="flex items-center gap-3">
-                                            <Calendar size={20} className="text-gray-500" weight="bold" />
-                                            <div>
-                                                <h3 className="font-semibold text-gray-900">Fecha</h3>
-                                                <p className="text-gray-600">
+                                                    <div className="flex items-center gap-2 text-white/90">
+                                                        <Calendar size={16} className="text-white/70" weight="bold" />
+                                                        <p className="text-sm font-medium">
                                                     {entry.date?.toDate ?
                                                         entry.date.toDate().toLocaleDateString('es-ES', {
                                                             weekday: 'long',
@@ -365,16 +564,26 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
                                                             day: 'numeric'
                                                         }) : entry.date}
                                                 </p>
-                                            </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Descripción */}
+                                                {entry.description && (
+                                                    <div>
+                                                        <p className="text-white/90 leading-relaxed text-sm md:text-base drop-shadow-md max-w-2xl">
+                                                            {entry.description}
+                                                        </p>
+                                                    </div>
+                                                )}
+
                                         </div>
                                     </div>
                                 )}
-                            </div>
                         </div>
 
                         {/* Vinyl Player FAB - Fixed en esquina inferior derecha */}
                         {entry.spotify && (
-                            <div className="fixed bottom-4 right-4 z-50">
+                                    <div className="fixed bottom-6 right-6 z-50">
                                 <FloatingVinylPlayer
                                     trackData={{
                                         preview_url: entry.spotify.preview_url,
@@ -385,6 +594,18 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
                             </div>
                         )}
 
+                                {/* Edit Entry Modal */}
+                                <EditEntryModal
+                                    entry={entry}
+                                    spaceId={currentSpaceId!}
+                                    isOpen={showEditModal}
+                                    onClose={() => setShowEditModal(false)}
+                                    onUpdated={() => {
+                                        // Refrescar la entrada después de actualizar
+                                        window.location.reload(); // Simple refresh por ahora
+                                    }}
+                                />
+
                         {/* Image Viewer Modal */}
                         <ImageViewer
                             images={entry.media?.filter((m: any) => m.type === 'image') || []}
@@ -394,9 +615,11 @@ export function EntryDetailModal({ entryId, spaceId: propSpaceId, onClose, onDel
                             title={entry.title}
                         />
                     </>
-                )}
+                        );
+                    })()}
+                </div>
             </div>
-        </div>
+        </>
     );
 
     return createPortal(modalContent, document.body);

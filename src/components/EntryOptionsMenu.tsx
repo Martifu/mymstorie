@@ -13,6 +13,7 @@ interface EntryOptionsMenuProps {
     hasSpotify?: boolean;
     onDeleted?: () => void;
     onUpdated?: () => void;
+    onEdit?: () => void;
 }
 
 export function EntryOptionsMenu({
@@ -23,7 +24,8 @@ export function EntryOptionsMenu({
     media = [],
     hasSpotify = false,
     onDeleted,
-    onUpdated
+    onUpdated,
+    onEdit
 }: EntryOptionsMenuProps) {
     const [showMenu, setShowMenu] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -86,17 +88,21 @@ export function EntryOptionsMenu({
 
     const handleEdit = () => {
         setShowMenu(false);
-        // Redirigir a página de edición según el tipo
-        switch (entryType) {
-            case 'memory':
-                navigate(`/memories/${entryId}/edit`);
-                break;
-            case 'goal':
-                navigate(`/goals/${entryId}/edit`);
-                break;
-            case 'child_event':
-                navigate(`/child/${entryId}/edit`);
-                break;
+        if (onEdit) {
+            onEdit();
+        } else {
+            // Fallback a navegación si no se proporciona callback
+            switch (entryType) {
+                case 'memory':
+                    navigate(`/memories/${entryId}/edit`);
+                    break;
+                case 'goal':
+                    navigate(`/goals/${entryId}/edit`);
+                    break;
+                case 'child_event':
+                    navigate(`/child/${entryId}/edit`);
+                    break;
+            }
         }
     };
 

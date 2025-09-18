@@ -30,10 +30,6 @@ export function Memories() {
                                 date: (entry as any).date?.toDate?.() || new Date(entry.date)
                             }}
                             onClick={() => setSelectedEntryId(entry.id)}
-                            onOptionsClick={() => {
-                                // TODO: Implementar menú de opciones
-                                console.log('Opciones para:', entry.id);
-                            }}
                         />
                     ))}
                 </div>

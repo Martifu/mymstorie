@@ -115,9 +115,9 @@ export function RootLayout() {
                     initial={{ y: 100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
-                    className="fixed bottom-5 left-0 right-0 mx-auto max-w-screen-sm z-50"
+                    className="fixed bottom-6 left-0 right-0 mx-auto max-w-screen-sm z-50"
                 >
-                    <div className="mx-4 rounded-2xl border bg-white/95 backdrop-blur shadow-softer grid grid-cols-5 p-1">
+                    <div className="mx-6 rounded-3xl bg-white/90 backdrop-blur-3xl border border-gray-200 shadow-xl shadow-black/10 grid grid-cols-5 p-1">
                         <Tab to="/" label="Inicio" Icon={Home2} />
                         <Tab to="/memories" label="Recuerdos" Icon={Image} />
                         <Tab to="/goals" label="Objetivos" Icon={DocumentText} />
@@ -138,24 +138,44 @@ function Tab({ to, label, Icon }: { to: string; label: string; Icon: IconCompone
             to={to}
             aria-label={label}
             className={({ isActive }) =>
-                `relative py-2 px-1 flex flex-col items-center justify-center text-xs font-medium transition-all duration-200 rounded-xl ${isActive
-                    ? 'text-brand-purple bg-brand-purple/10'
-                    : 'text-text-muted hover:text-brand-purple hover:bg-brand-purple/5'
+                `relative py-3 px-2 flex flex-col items-center justify-center text-xs font-medium transition-all duration-300 rounded-2xl ${isActive
+                    ? 'text-brand-purple bg-brand-purple/10 backdrop-blur-xl'
+                    : 'text-gray-600 hover:text-brand-purple hover:bg-brand-purple/5'
                 }`
             }
         >
             {({ isActive }) => (
                 <motion.div
                     initial={false}
-                    animate={{ scale: isActive ? 1.1 : 1 }}
-                    transition={{ duration: 0.2, type: "spring", stiffness: 300 }}
+                    animate={{
+                        scale: isActive ? 1.05 : 1,
+                        y: isActive ? -2 : 0
+                    }}
+                    transition={{ duration: 0.3, type: "spring", stiffness: 400, damping: 30 }}
                     className="flex flex-col items-center gap-1"
                 >
-                    <Icon size={20} variant={isActive ? "Bold" : "Outline"} color={isActive ? '#8B5CF6' : '#A3A3A3'} />
-                    <span className={`text-[10px] leading-none ${isActive ? 'font-semibold' : 'font-medium'}`}>
+                    <motion.div
+                        animate={{
+                            scale: isActive ? 1.1 : 1,
+                            rotate: isActive ? [0, -5, 5, 0] : 0
+                        }}
+                        transition={{
+                            duration: isActive ? 0.5 : 0.3,
+                            rotate: { duration: 0.6, ease: "easeInOut" }
+                        }}
+                    >
+                        <Icon
+                            size={22}
+                            variant={isActive ? "Bold" : "Outline"}
+                            color={isActive ? '#8B5CF6' : '#6B7280'}
+                        />
+                    </motion.div>
+                    <span className={`text-[10px] leading-none transition-all duration-300 ${isActive
+                        ? 'font-bold text-brand-purple'
+                        : 'font-medium text-gray-600'
+                        }`}>
                         {label}
                     </span>
-
                 </motion.div>
             )}
         </NavLink>

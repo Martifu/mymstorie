@@ -30,8 +30,8 @@ export function AppBar({
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const containerClasses = `fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-        ? 'bg-white/95 backdrop-blur-sm shadow-lg border-b border-gray-200'
+    const containerClasses = `fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled
+        ? 'bg-white/80 backdrop-blur-2xl shadow-2xl shadow-black/5 border-b border-white/20'
         : 'bg-transparent'
         } px-4 pt-4 pb-2`;
 

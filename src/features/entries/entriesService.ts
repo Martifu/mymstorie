@@ -360,3 +360,95 @@ export async function addSpotifyToEntry(
     updatedAt: serverTimestamp()
   });
 }
+
+// Actualizar entrada completa
+export async function updateEntry(
+  spaceId: string,
+  entryId: string,
+  updateData: {
+    title?: string;
+    description?: string;
+    date?: Date;
+    media?: { id: string; url: string; type: 'image' | 'video'; width?: number; height?: number; storagePath: string; }[];
+    spotify?: EntrySpotifyData | null;
+  },
+  newFiles?: File[],
+  onProgress?: (fileName: string, progress: number) => void
+): Promise<void> {
+  if (!auth.currentUser) {
+    throw new Error('Usuario no autenticado');
+  }
+
+  const refDoc = doc(db, `spaces/${spaceId}/entries/${entryId}`);
+  
+  // Verificar que el documento existe
+  const docSnap = await getDoc(refDoc);
+  if (!docSnap.exists()) {
+    throw new Error('La entrada no existe');
+  }
+
+  // Subir nuevos archivos si los hay
+  const newMedia: { id: string; url: string; type: 'image' | 'video'; width?: number; height?: number; storagePath: string; }[] = [];
+  
+  if (newFiles && newFiles.length > 0) {
+    for (const file of newFiles) {
+      const id = crypto.randomUUID();
+      const path = `spaces/${spaceId}/entries/${entryId}/${id}-${file.name}`;
+      const refPath = ref(storage, path);
+
+      const uploadTask = uploadBytesResumable(refPath, file);
+
+      await new Promise<void>((resolve, reject) => {
+        uploadTask.on('state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            onProgress?.(file.name, Math.round(progress));
+          },
+          (error) => reject(error),
+          () => resolve()
+        );
+      });
+
+      const url = await getDownloadURL(refPath);
+      newMedia.push({ 
+        id, 
+        url, 
+        type: file.type.startsWith('video/') ? 'video' : 'image', 
+        storagePath: path 
+      });
+    }
+  }
+
+  // Preparar datos de actualización
+  const finalUpdateData: any = {
+    updatedAt: serverTimestamp()
+  };
+
+  if (updateData.title !== undefined) {
+    finalUpdateData.title = updateData.title;
+  }
+
+  if (updateData.description !== undefined) {
+    finalUpdateData.description = updateData.description || '';
+  }
+
+  if (updateData.date !== undefined) {
+    finalUpdateData.date = updateData.date;
+  }
+
+  if (updateData.media !== undefined || newMedia.length > 0) {
+    // Combinar media existente con nueva media
+    const existingMedia = updateData.media || [];
+    finalUpdateData.media = [...existingMedia, ...newMedia];
+  }
+
+  if (updateData.spotify !== undefined) {
+    if (updateData.spotify === null) {
+      finalUpdateData.spotify = deleteField();
+    } else {
+      finalUpdateData.spotify = updateData.spotify;
+    }
+  }
+
+  await updateDoc(refDoc, finalUpdateData);
+}

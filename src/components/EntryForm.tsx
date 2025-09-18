@@ -93,7 +93,7 @@ export function EntryForm({ onSubmit, initialTitle = '' }: { onSubmit: (data: Fo
                 <input className="mt-1 w-full rounded-xl border p-3" placeholder="familia, viaje" {...register('tags')} />
             </div>
             <div>
-                <label className="block text-sm font-semibold mb-2">Fotos o video (hasta 10)</label>
+                <label className="block text-sm font-semibold mb-2">Fotos y video (máximo 1 video)</label>
                 <FileUpload
                     files={files}
                     onChange={setFiles}
